@@ -1,4 +1,6 @@
 "use client";
+
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store";
 import { BottomNav } from "@/components/ui/BottomNav";
@@ -11,6 +13,13 @@ export default function BroadcastingPage() {
   const router = useRouter();
   const { currentSpot, reset, t } = useAppStore();
 
+  // Redirección segura en el navegador si no hay spot seleccionado
+  useEffect(() => {
+    if (!currentSpot) {
+      router.push("/release");
+    }
+  }, [currentSpot, router]);
+
   const handleCancel = async () => {
     if (!currentSpot) return;
     await fetch(`/api/spots/${currentSpot.id}/cancel`, { method: "POST" });
@@ -19,7 +28,7 @@ export default function BroadcastingPage() {
     router.push("/dashboard");
   };
 
-  if (!currentSpot) { router.push("/release"); return null; }
+  if (!currentSpot) return null;
 
   return (
     <AuthGuard>
