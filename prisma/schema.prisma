@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String   @default("")
+  phone         String?  @unique
+  image         String?
+  role          String   @default("USER")
+  points        Int      @default(0)
+  karmaScore    Float    @default(5.0)
+  totalRatings  Int      @default(0)
+  isVerified    Boolean  @default(false)
+  isBanned      Boolean  @default(false)
+  language      String   @default("es")
+  theme         String   @default("system")
+  accentColor   String   @default("#5CFFC0")
+  onboarded     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  spotsAsLeaver Spot[]       @relation("LeaverSpots")
+  ratings       Rating[]     @relation("RatingsGiven")
+  redemptions   Redemption[]
+
+  @@map("users")
+}
+
+model Spot {
+  id           String    @id @default(cuid())
+  leaverId     String
+  status       String    @default("AVAILABLE")
+  latitude     Float
+  longitude    Float
+  locationDesc String?
+  notes        String?
+  vehicleSize  String    @default("COMPACT")
+  parkingType  String    @default("PARALLEL")
+  zoneType     String    @default("FREE")
+  isLeaving    Boolean   @default(false)
+  expiresAt    DateTime
+  occupiedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  leaver  User     @relation("LeaverSpots", fields: [leaverId], references: [id])
+  ratings Rating[]
+
+  @@index([status])
+  @@index([leaverId])
+  @@index([latitude, longitude])
+  @@map("spots")
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  spotId    String
+  giverId   String
+  accurate  Boolean
+  comment   String?
+  createdAt DateTime @default(now())
+
+  spot  Spot @relation(fields: [spotId], references: [id])
+  giver User @relation("RatingsGiven", fields: [giverId], references: [id])
+
+  @@map("ratings")
+}
+
+model RewardItem {
+  id          String       @id @default(cuid())
+  name        String
+  description String
+  type        String
+  value       String
+  cost        Int
+  emoji       String       @default("🎨")
+  createdAt   DateTime     @default(now())
+
+  redemptions Redemption[]
+
+  @@map("reward_items")
+}
+
+model Redemption {
+  id        String   @id @default(cuid())
+  userId    String
+  itemId    String
+  createdAt DateTime @default(now())
+
+  user User       @relation(fields: [userId], references: [id])
+  item RewardItem @relation(fields: [itemId], references: [id])
+
+  @@map("redemptions")
+}
+
+model PointLedger {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int
+  type      String
+  reference String?
+  createdAt DateTime @default(now())
+
+  @@map("point_ledger")
+}
