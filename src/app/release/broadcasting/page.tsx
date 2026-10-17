@@ -24,7 +24,7 @@ export default function BroadcastingPage() {
     if (!currentSpot) return;
     await fetch(`/api/spots/${currentSpot.id}/cancel`, { method: "POST" });
     reset();
-    toast("Publicación cancelada.");
+    toast(t("broadcastCanceled"));
     router.push("/dashboard");
   };
 
@@ -56,18 +56,18 @@ export default function BroadcastingPage() {
             )}
             <div className="flex items-center gap-3">
               <Clock size={16} className="text-muted flex-shrink-0" />
-              <p className="text-sm text-muted">Expira en 2 horas automáticamente</p>
+              <p className="text-sm text-muted">{t("autoExpires")}</p>
             </div>
             <div className="flex items-center gap-3">
               <Zap size={16} className="text-accent flex-shrink-0" />
-              <p className="text-sm"><span className="font-semibold text-accent">+10 puntos</span> ganados</p>
+              <p className="text-sm"><span className="font-semibold text-accent">{t("pointsEarned")}</span></p>
             </div>
           </div>
 
           {/* Actions */}
           <div className="w-full max-w-sm mt-6 flex flex-col gap-3">
             <Button size="lg" onClick={() => router.push("/dashboard")}>
-              Ver en el mapa
+              {t("viewOnMap")}
             </Button>
             <Button size="lg" variant="danger" onClick={handleCancel}>
               {t("cancelBroadcast")}

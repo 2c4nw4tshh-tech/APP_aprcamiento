@@ -1,7 +1,8 @@
 export type SpotStatus = "AVAILABLE" | "OCCUPIED" | "EXPIRED";
-export type VehicleSize = "COMPACT" | "SUV" | "VAN";
+export type VehicleSize = "MOTO" | "COMPACT" | "SUV" | "VAN";
+export type SpotSize = "SMALL" | "MEDIUM" | "LARGE";
 export type ParkingType = "PARALLEL" | "BATTERY" | "ANGLE";
-export type ZoneType = "FREE" | "METERED" | "BLUE" | "GREEN";
+export type ZoneType = "FREE" | "BLUE" | "GREEN";
 export type Language = "es" | "en";
 export type Theme = "light" | "dark" | "system";
 
@@ -12,11 +13,13 @@ export interface User {
   image?: string;
   role: string;
   points: number;
+  stars?: number;
   karmaScore: number;
   isVerified: boolean;
   language: Language;
   theme: Theme;
   accentColor: string;
+  customMarker?: string;
   onboarded: boolean;
   createdAt: string;
 }
@@ -30,20 +33,23 @@ export interface Spot {
   locationDesc?: string;
   notes?: string;
   vehicleSize: VehicleSize;
+  spotSize: SpotSize;
   parkingType: ParkingType;
   zoneType: ZoneType;
   isLeaving: boolean;
+  availableAt: string;
   expiresAt: string;
   createdAt: string;
-  leaver?: Pick<User, "id" | "name" | "image" | "karmaScore">;
+  leaver?: Pick<User, "id" | "name" | "image" | "karmaScore" | "customMarker">;
   distance?: number;
   minutesAgo?: number;
+  countdownMinutes?: number;
 }
 
 export interface NearbySpot extends Spot {
   distance: number;
   minutesAgo: number;
-  leaver: Pick<User, "id" | "name" | "image" | "karmaScore">;
+  leaver: Pick<User, "id" | "name" | "image" | "karmaScore" | "customMarker">;
 }
 
 export interface RewardItem {
@@ -69,15 +75,44 @@ export interface Coordinates {
   lng: number;
 }
 
+export interface RealtimeParkingSpot {
+  id: string;
+  ownerId: string;
+  legacySpotId?: string | null;
+  lat: number;
+  lng: number;
+  status: "DISPONIBLE" | "RESERVADA_EN_CAMINO" | "OCUPADA" | "INACTIVA";
+  lockedUntil: string | null;
+  updatedAt: string;
+}
+
+export interface ReservationRecord {
+  id: string;
+  userId: string;
+  parkingSpotId: string;
+  status: "PENDING" | "EN_CAMINO" | "COMPLETADA" | "CANCELADA" | "EXPIRADA";
+  originLat: number | null;
+  originLng: number | null;
+  etaMinutes: number | null;
+  distanceKm: number | null;
+  enRouteAt: string | null;
+  arrivedAt: string | null;
+  starsAwarded: number;
+  parkingSpot?: RealtimeParkingSpot;
+}
+
 export interface ReleaseSpotPayload {
   latitude: number;
   longitude: number;
   locationDesc?: string;
   notes?: string;
   vehicleSize: VehicleSize;
+  spotSize: SpotSize;
   parkingType: ParkingType;
   zoneType: ZoneType;
   isLeaving: boolean;
+  availableAt?: string;
+  releaseDelayMinutes?: number;
 }
 
 export interface ApiResponse<T> {
@@ -111,6 +146,29 @@ export const TRANSLATIONS = {
     occupied: "Ocupado",
     reportOccupied: "Reportar como ocupado",
     navigateTo: "Cómo llegar",
+    navigateInApp: "Navegar en la app",
+    routeCardTitle: "Ruta hacia el aparcamiento",
+    cancelRoute: "Cancelar ruta",
+    routeCalculating: "Calculando ruta con tráfico…",
+    routeEta: "Tiempo estimado",
+    routeDistance: "Distancia",
+    startRouteAndReserve: "Iniciar ruta y reservar",
+    startingRoute: "Calculando ruta y bloqueando plaza…",
+    routeInProgress: "En camino · check-in automático activo",
+    checkingIn: "Confirmando llegada…",
+    distanceToSpotMeters: "A {n} m de la plaza",
+    arrivalConfirmed: "¡Has llegado!",
+    reservationCompleted: "La reserva se completó correctamente.",
+    driverStarsEarned: "Estrellas para ti",
+    ownerStarsEarned: "Estrellas para el propietario",
+    done: "Hecho",
+    chooseNavigationApp: "Elige una aplicación de navegación",
+    googleMaps: "Google Maps",
+    waze: "Waze",
+    appleMaps: "Apple Maps",
+    gettingNavigationOrigin: "Obteniendo tu ubicación actual…",
+    navigationLocationError: "No se pudo obtener tu ubicación actual. Activa el permiso para trazar la ruta desde tu posición.",
+    retryLocation: "Volver a intentar ubicación",
     minutesAgo: "hace {n} min",
     hoursAgo: "hace {n} h",
     likelyOccupied: "⚠️ Puede que ya esté ocupado",
@@ -128,7 +186,101 @@ export const TRANSLATIONS = {
     themeLight: "Claro",
     themeDark: "Oscuro",
     themeSystem: "Sistema",
+    themeSavedLocally: "Tema guardado en este dispositivo.",
     save: "Guardar",
+    locationSearching: "Buscando tu ubicación…",
+    reminderTitle: "Recordatorio útil",
+    reminderMessage: "Si sales de casa, publica tu plaza cuando te vayas para ayudar a otros vecinos.",
+    dashboardEnableLocation: "Activa la ubicación para ver aparcamientos cerca de ti.",
+    findDestination: "Buscar destino…",
+    searchAddressPlaceholder: "Escribe una calle o dirección",
+    selectOnMap: "Seleccionar en el mapa",
+    searchingAddresses: "Buscando direcciones…",
+    noAddressResults: "No se encontraron coincidencias.",
+    clearSearch: "Borrar búsqueda",
+    useMyLocation: "Mi ubicación",
+    searchingAround: "Buscando plazas cerca de {place}",
+    tapMapToChoose: "Toca el mapa para fijar el punto de búsqueda.",
+    mapPoint: "Punto seleccionado en el mapa",
+    radius: "Radio:",
+    car: "Coche",
+    fourByFour: "4x4",
+    motorcycle: "Moto",
+    van: "Furgoneta",
+    freeZone: "Zona Gratis",
+    blueZone: "Zona Azul",
+    greenZone: "Zona Verde",
+    smallSpot: "Pequeña",
+    mediumSpot: "Mediana",
+    largeSpot: "Grande",
+    minutesShort: "min",
+    closeNotice: "Cerrar aviso",
+    radarSearch: "Buscar cerca de mí",
+    spotsAvailable: "{n} disponibles",
+    leavingSoon: "Sale pronto",
+    locationExample: "Ej.: Frente al edificio azul, plaza #4",
+    notesExample: "Ej.: Acera derecha, entre dos coches rojos…",
+    spotSize: "Tamaño de plaza",
+    releaseTime: "Tiempo de liberación",
+    availableNow: "Ya disponible",
+    releasingIn: "Dejo mi plaza en {n} min",
+    occupySpot: "Ocupar este aparcamiento",
+    shareCommunity: "Compartir hace comunidad",
+    shareCommunityMessage: "Si cierras esta plaza sin reservar, compartirla ayuda a otros usuarios y reduce la presión sobre la ciudad.",
+    availabilityWarning: "En zonas con alta demanda, la disponibilidad puede variar según el tiempo transcurrido desde su publicación.",
+    ratePublisher: "Valora a quien publica la plaza",
+    ratingHelps: "Tu valoración ayuda a mejorar la comunidad.",
+    rewardsSubtitle: "Canjea tus puntos por recompensas visuales",
+    rewardEarnTip: "Gana 10 puntos cada vez que liberas un aparcamiento.",
+    active: "Activo",
+    pointsCost: "🪙 {n} puntos",
+    autoExpires: "Expira en 2 horas automáticamente",
+    pointsEarned: "+10 puntos ganados",
+    viewOnMap: "Ver en el mapa",
+    broadcastCanceled: "Publicación cancelada.",
+    signInSubtitle: "Aparcamiento urbano, reimaginado",
+    yourEmail: "Tu email",
+    enterEmail: "Introduce tu email para continuar",
+    signInFailed: "No se pudo iniciar sesión. Inténtalo de nuevo.",
+    signInButton: "Entrar →",
+    demoMode: "Modo desarrollo: cualquier email válido crea una cuenta automáticamente.",
+    demoAddress: "Prueba: demo@spotsync.com",
+    oauthNote: "El acceso con Google estará disponible cuando se configure.",
+    requiredName: "Tu nombre es requerido",
+    namePlaceholder: "Tu nombre",
+    mapPreparing: "Preparando el mapa…",
+    mapLoadFailed: "No se pudo cargar el mapa.",
+    dashboardError: "Ha ocurrido un problema al iniciar el dashboard. Puedes volver a intentarlo.",
+    retryMap: "Reintentar cargar el mapa",
+    geoBlocked: "El navegador tiene bloqueada la ubicación para este sitio. Habilítala desde el candado o los ajustes de la barra de direcciones.",
+    geoHttp: "La geolocalización no está disponible por HTTP en esta red. Accede por HTTPS para activar la ubicación.",
+    geoUnavailable: "La ubicación no está disponible temporalmente. Inténtalo de nuevo en unos segundos.",
+    geoUnsupported: "La geolocalización no está disponible en este navegador.",
+    geoGeneral: "No se pudo obtener la ubicación del dispositivo.",
+    mapNotConfigured: "El mapa no está configurado. Comprueba el token de Mapbox.",
+    mapLoading: "Cargando mapa…",
+    mapStylePickerLabel: "Estilo del mapa",
+    mapLayers: "Capas",
+    mapStyleStreets: "Calles",
+    mapStyleSatellite: "Satélite",
+    mapStyleDark: "Oscuro",
+    mapStyleTerrain: "Terreno 3D",
+    occupyThanks: "Plaza ocupada. Gracias por compartir y valorar al usuario.",
+    occupyFailed: "No se pudo ocupar la plaza.",
+    closeDetails: "Cerrar detalle de plaza",
+    rateWithStars: "Valorar con {n} estrellas",
+    radarFound: "He encontrado {n} plaza(s) cerca de ti.",
+    radarEmpty: "No hay plazas libres cerca de ti en este momento.",
+    rewardActivated: "¡{name} activado!",
+    unlockedRewards: "Premios desbloqueados",
+    restoreOriginalColor: "Restaurar color original",
+    originalColorRestored: "Color original restaurado.",
+    rewardsCatalog: "Recompensas y emojis",
+    noUnlockedRewards: "Aún no has desbloqueado colores ni emojis.",
+    appColor: "Color de la aplicación",
+    spotEmoji: "Emoji de tus plazas",
+    preferenceApplied: "Preferencia aplicada.",
+    nameUpdated: "Nombre actualizado.",
     cancel: "Cancelar",
     welcome: "¡Bienvenido a SpotSync!",
     onboardingSubtitle: "Cuéntanos un poco sobre ti para empezar",
@@ -174,6 +326,29 @@ export const TRANSLATIONS = {
     occupied: "Occupied",
     reportOccupied: "Report as occupied",
     navigateTo: "Navigate",
+    navigateInApp: "Navigate in app",
+    routeCardTitle: "Route to parking spot",
+    cancelRoute: "Cancel route",
+    routeCalculating: "Calculating route with traffic…",
+    routeEta: "Estimated time",
+    routeDistance: "Distance",
+    startRouteAndReserve: "Start route and reserve",
+    startingRoute: "Calculating route and locking spot…",
+    routeInProgress: "En route · automatic check-in active",
+    checkingIn: "Confirming arrival…",
+    distanceToSpotMeters: "{n} m from the spot",
+    arrivalConfirmed: "You have arrived!",
+    reservationCompleted: "The reservation was completed successfully.",
+    driverStarsEarned: "Stars for you",
+    ownerStarsEarned: "Stars for the owner",
+    done: "Done",
+    chooseNavigationApp: "Choose a navigation app",
+    googleMaps: "Google Maps",
+    waze: "Waze",
+    appleMaps: "Apple Maps",
+    gettingNavigationOrigin: "Getting your current location…",
+    navigationLocationError: "Could not get your current location. Enable location access to route from where you are.",
+    retryLocation: "Retry location",
     minutesAgo: "{n} min ago",
     hoursAgo: "{n} h ago",
     likelyOccupied: "⚠️ Might already be taken",
@@ -191,7 +366,101 @@ export const TRANSLATIONS = {
     themeLight: "Light",
     themeDark: "Dark",
     themeSystem: "System",
+    themeSavedLocally: "Theme saved on this device.",
     save: "Save",
+    locationSearching: "Finding your location…",
+    reminderTitle: "Helpful reminder",
+    reminderMessage: "If you are heading out, post your spot as you leave to help nearby drivers.",
+    dashboardEnableLocation: "Enable location to see nearby parking spots.",
+    findDestination: "Search destination…",
+    searchAddressPlaceholder: "Enter a street or address",
+    selectOnMap: "Select on map",
+    searchingAddresses: "Searching addresses…",
+    noAddressResults: "No matching addresses found.",
+    clearSearch: "Clear search",
+    useMyLocation: "My location",
+    searchingAround: "Searching for spots near {place}",
+    tapMapToChoose: "Tap the map to set the search point.",
+    mapPoint: "Point selected on map",
+    radius: "Radius:",
+    car: "Car",
+    fourByFour: "4x4",
+    motorcycle: "Motorcycle",
+    van: "Van",
+    freeZone: "Free zone",
+    blueZone: "Blue zone",
+    greenZone: "Green zone",
+    smallSpot: "Small",
+    mediumSpot: "Medium",
+    largeSpot: "Large",
+    minutesShort: "min",
+    closeNotice: "Close notice",
+    radarSearch: "Search near me",
+    spotsAvailable: "{n} available",
+    leavingSoon: "Leaving soon",
+    locationExample: "E.g. In front of the blue building, spot #4",
+    notesExample: "E.g. Right-hand sidewalk, between two red cars…",
+    spotSize: "Spot size",
+    releaseTime: "Release time",
+    availableNow: "Available now",
+    releasingIn: "Leaving in {n} min",
+    occupySpot: "Occupy this parking spot",
+    shareCommunity: "Sharing builds community",
+    shareCommunityMessage: "If you close this spot without reserving it, sharing helps other users and reduces pressure on the city.",
+    availabilityWarning: "In high-demand areas, availability may change depending on how long ago the spot was posted.",
+    ratePublisher: "Rate the person who posted this spot",
+    ratingHelps: "Your rating helps improve the community.",
+    rewardsSubtitle: "Redeem your points for visual rewards",
+    rewardEarnTip: "Earn 10 points every time you release a parking spot.",
+    active: "Active",
+    pointsCost: "🪙 {n} points",
+    autoExpires: "Expires automatically in 2 hours",
+    pointsEarned: "+10 points earned",
+    viewOnMap: "View on map",
+    broadcastCanceled: "Broadcast canceled.",
+    signInSubtitle: "Urban parking, reimagined",
+    yourEmail: "Your email",
+    enterEmail: "Enter your email to continue",
+    signInFailed: "Could not sign in. Please try again.",
+    signInButton: "Sign in →",
+    demoMode: "Development mode: any valid email automatically creates an account.",
+    demoAddress: "Try: demo@spotsync.com",
+    oauthNote: "Google sign-in will be available once configured.",
+    requiredName: "Your name is required",
+    namePlaceholder: "Your name",
+    mapPreparing: "Preparing the map…",
+    mapLoadFailed: "Could not load the map.",
+    dashboardError: "There was a problem starting the dashboard. You can try again.",
+    retryMap: "Retry loading map",
+    geoBlocked: "This site is blocked from accessing your location. Enable it using the lock icon or address-bar site settings.",
+    geoHttp: "Geolocation is unavailable over HTTP on this network. Use HTTPS to enable location.",
+    geoUnavailable: "Location is temporarily unavailable. Please try again in a few seconds.",
+    geoUnsupported: "Geolocation is unavailable in this browser.",
+    geoGeneral: "Could not get the device location.",
+    mapNotConfigured: "The map is not configured. Check the Mapbox token.",
+    mapLoading: "Loading map…",
+    mapStylePickerLabel: "Map style",
+    mapLayers: "Layers",
+    mapStyleStreets: "Streets",
+    mapStyleSatellite: "Satellite",
+    mapStyleDark: "Dark",
+    mapStyleTerrain: "3D terrain",
+    occupyThanks: "Spot marked occupied. Thanks for sharing and rating the user.",
+    occupyFailed: "Could not mark this spot as occupied.",
+    closeDetails: "Close spot details",
+    rateWithStars: "Rate with {n} stars",
+    radarFound: "Found {n} parking spot(s) near you.",
+    radarEmpty: "There are no available parking spots nearby right now.",
+    rewardActivated: "{name} activated!",
+    unlockedRewards: "Unlocked rewards",
+    restoreOriginalColor: "Restore original color",
+    originalColorRestored: "Original color restored.",
+    rewardsCatalog: "Rewards and emojis",
+    noUnlockedRewards: "You have not unlocked any colors or emojis yet.",
+    appColor: "App color",
+    spotEmoji: "Spot marker emoji",
+    preferenceApplied: "Preference applied.",
+    nameUpdated: "Name updated.",
     cancel: "Cancel",
     welcome: "Welcome to SpotSync!",
     onboardingSubtitle: "Tell us a bit about yourself to get started",

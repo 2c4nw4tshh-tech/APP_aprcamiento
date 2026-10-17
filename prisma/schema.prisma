@@ -8,6 +8,21 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum SpotStatus {
+  DISPONIBLE
+  RESERVADA_EN_CAMINO
+  OCUPADA
+  INACTIVA
+}
+
+enum ReservationStatus {
+  PENDING
+  EN_CAMINO
+  COMPLETADA
+  CANCELADA
+  EXPIRADA
+}
+
 model User {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -16,6 +31,7 @@ model User {
   image         String?
   role          String   @default("USER")
   points        Int      @default(0)
+  stars         Int      @default(0)
   karmaScore    Float    @default(5.0)
   totalRatings  Int      @default(0)
   isVerified    Boolean  @default(false)
@@ -23,6 +39,7 @@ model User {
   language      String   @default("es")
   theme         String   @default("system")
   accentColor   String   @default("#5CFFC0")
+  customMarker  String   @default("📍")
   onboarded     Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -30,8 +47,54 @@ model User {
   spotsAsLeaver Spot[]       @relation("LeaverSpots")
   ratings       Rating[]     @relation("RatingsGiven")
   redemptions   Redemption[]
+  ownedParkingSpots ParkingSpot[] @relation("ParkingSpotOwner")
+  reservations     Reservation[]  @relation("ReservationUser")
 
   @@map("users")
+}
+
+model ParkingSpot {
+  id          String     @id @default(cuid())
+  ownerId     String
+  legacySpotId String?   @unique
+  lat         Float
+  lng         Float
+  status      SpotStatus @default(DISPONIBLE)
+  lockedUntil DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  owner        User          @relation("ParkingSpotOwner", fields: [ownerId], references: [id])
+  legacySpot   Spot?         @relation(fields: [legacySpotId], references: [id], onDelete: SetNull)
+  reservations Reservation[]
+
+  @@index([lat, lng])
+  @@index([status])
+  @@index([ownerId])
+  @@map("parking_spots")
+}
+
+model Reservation {
+  id            String            @id @default(cuid())
+  userId        String
+  parkingSpotId String
+  status        ReservationStatus @default(PENDING)
+  originLat     Float?
+  originLng     Float?
+  etaMinutes    Int?
+  distanceKm    Float?
+  enRouteAt     DateTime?
+  arrivedAt     DateTime?
+  starsAwarded  Int               @default(0)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  user        User        @relation("ReservationUser", fields: [userId], references: [id])
+  parkingSpot ParkingSpot @relation(fields: [parkingSpotId], references: [id])
+
+  @@index([userId, status])
+  @@index([parkingSpotId, status])
+  @@map("reservations")
 }
 
 model Spot {
@@ -43,9 +106,11 @@ model Spot {
   locationDesc String?
   notes        String?
   vehicleSize  String    @default("COMPACT")
+  spotSize     String    @default("MEDIUM")
   parkingType  String    @default("PARALLEL")
   zoneType     String    @default("FREE")
   isLeaving    Boolean   @default(false)
+  availableAt  DateTime  @default(now())
   expiresAt    DateTime
   occupiedAt   DateTime?
   createdAt    DateTime  @default(now())
@@ -53,6 +118,7 @@ model Spot {
 
   leaver  User     @relation("LeaverSpots", fields: [leaverId], references: [id])
   ratings Rating[]
+  parkingSpot ParkingSpot?
 
   @@index([status])
   @@index([leaverId])

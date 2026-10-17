@@ -1,5 +1,5 @@
 "use client";
-import { useSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { useAppStore } from "@/store";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { AuthGuard } from "@/components/ui/AuthGuard";
@@ -8,9 +8,8 @@ import { Settings, LogOut, Star, Zap } from "lucide-react";
 import Link from "next/link";
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
   const { user, t } = useAppStore();
-  const u = (session?.user ?? user) as typeof user;
+  const u = user;
 
   return (
     <AuthGuard>

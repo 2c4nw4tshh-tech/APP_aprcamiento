@@ -1,58 +1,42 @@
 "use client";
 import { NearbySpot } from "@/types";
-import { formatDistance, openInMaps } from "@/lib/gis";
+import { formatDistance } from "@/lib/gis";
 import { useAppStore } from "@/store";
 import { Button } from "@/components/ui/Button";
-import { X, MapPin, Clock, Car, Navigation, AlertTriangle, Star } from "lucide-react";
+import { NudgeBanner } from "@/components/ui/NudgeBanner";
+import { X, MapPin, Clock, Car, AlertTriangle, Star, Route } from "lucide-react";
 import { useState } from "react";
-import toast from "react-hot-toast";
+import { NavigationChooser } from "@/components/ui/NavigationChooser";
+import { SpotActionButton } from "@/components/map/SpotActionButton";
 
 interface Props {
   spot: NearbySpot;
   onClose: () => void;
   onOccupied: (id: string) => void;
+  onNavigateInApp?: () => void;
+  onRouteStarted?: (origin: { lat: number; lng: number }, destination: { lat: number; lng: number }) => void;
 }
 
 const ZONE_LABEL: Record<string, Record<string, string>> = {
-  es: { FREE: "Libre", METERED: "Parquímetro", BLUE: "Zona Azul", GREEN: "Zona Verde" },
-  en: { FREE: "Free",  METERED: "Metered",     BLUE: "Blue Zone", GREEN: "Green Zone" },
+  es: { FREE: "Zona Gratis", BLUE: "Zona Azul", GREEN: "Zona Verde" },
+  en: { FREE: "Free", BLUE: "Blue Zone", GREEN: "Green Zone" },
 };
 
-export function SpotDetailModal({ spot, onClose, onOccupied }: Props) {
+export function SpotDetailModal({ spot, onClose, onOccupied, onNavigateInApp, onRouteStarted }: Props) {
   const t = useAppStore((s) => s.t);
   const lang = useAppStore((s) => s.language);
-  const [reporting, setReporting] = useState(false);
+  const [showShareNudge, setShowShareNudge] = useState(true);
 
   const zoneLabel = ZONE_LABEL[lang]?.[spot.zoneType] ?? spot.zoneType;
+  const vehicleLabel = spot.vehicleSize === "MOTO" ? t("motorcycle") : spot.vehicleSize === "COMPACT" ? t("car") : spot.vehicleSize === "SUV" ? t("fourByFour") : t("van");
   const isOld = spot.minutesAgo > 30;
 
-  const handleOccupied = async () => {
-    setReporting(true);
-    try {
-      await fetch(`/api/spots/${spot.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "occupied" }),
-      });
-      toast.success(t("spotReported"));
-      onOccupied(spot.id);
-      onClose();
-    } catch {
-      toast.error("Error");
-    } finally {
-      setReporting(false);
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="w-full max-w-md bg-surface rounded-t-3xl border-t border-base p-5 pb-safe"
+        className="w-full max-w-md bg-surface rounded-3xl border border-base p-5 pb-safe shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle */}
-        <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
-
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
@@ -64,7 +48,7 @@ export function SpotDetailModal({ spot, onClose, onOccupied }: Props) {
               {spot.locationDesc || `${spot.latitude.toFixed(5)}, ${spot.longitude.toFixed(5)}`}
             </p>
           </div>
-          <button onClick={onClose} className="text-muted ml-3"><X size={20} /></button>
+          <button onClick={onClose} aria-label={t("closeDetails")} className="text-muted ml-3 rounded-full p-1 hover:bg-surface2 transition-colors"><X size={20} /></button>
         </div>
 
         {/* Time warning */}
@@ -80,7 +64,7 @@ export function SpotDetailModal({ spot, onClose, onOccupied }: Props) {
           {[
             { icon: Clock,  label: spot.minutesAgo < 60 ? t("minutesAgo", { n: spot.minutesAgo }) : t("hoursAgo", { n: Math.floor(spot.minutesAgo / 60) }) },
             { icon: MapPin, label: formatDistance(spot.distance) },
-            { icon: Car,    label: spot.vehicleSize },
+            { icon: Car,    label: vehicleLabel },
             { icon: Star,   label: zoneLabel },
           ].map(({ icon: Icon, label }, i) => (
             <div key={i} className="flex items-center gap-2 bg-surface2 rounded-xl px-3 py-2">
@@ -117,25 +101,49 @@ export function SpotDetailModal({ spot, onClose, onOccupied }: Props) {
 
         {/* Actions */}
         <div className="flex gap-3">
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={handleOccupied}
-            loading={reporting}
-            className="flex-1"
-          >
-            {t("reportOccupied")}
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => openInMaps(spot.latitude, spot.longitude, spot.locationDesc)}
-            className="flex-1 flex items-center gap-2"
-          >
-            <Navigation size={14} />
-            {t("navigateTo")}
-          </Button>
+          <div className="flex-1">
+            <SpotActionButton
+              spotId={spot.id}
+              latitude={spot.latitude}
+              longitude={spot.longitude}
+              onCompleted={() => onOccupied(spot.id)}
+              onRouteStarted={onRouteStarted}
+            />
+          </div>
+          <NavigationChooser
+            latitude={spot.latitude}
+            longitude={spot.longitude}
+            label={spot.locationDesc}
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+          />
         </div>
+        {onNavigateInApp && (
+          <Button
+            variant="navigation"
+            size="sm"
+            onClick={onNavigateInApp}
+            className="mt-2 w-full gap-2 rounded-2xl"
+          >
+            <Route size={15} /> {t("navigateInApp")}
+          </Button>
+        )}
+
+        {showShareNudge && (
+          <div className="mt-4">
+            <NudgeBanner
+              title={t("shareCommunity")}
+              message={t("shareCommunityMessage")}
+              closeLabel={t("closeNotice")}
+              onClose={() => setShowShareNudge(false)}
+            />
+          </div>
+        )}
+
+        <p className="mt-4 text-[10px] leading-relaxed text-muted text-center">
+          {t("availabilityWarning")}
+        </p>
       </div>
+
     </div>
   );
 }

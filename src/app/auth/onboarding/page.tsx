@@ -1,28 +1,43 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useAppStore } from "@/store";
 import { Button } from "@/components/ui/Button";
 import { Language } from "@/types";
 import toast from "react-hot-toast";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { data: session, status, update } = useSession();
   const { setLanguage, t } = useAppStore();
   const [name, setName] = useState("");
   const [lang, setLang] = useState<Language>("es");
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (status === "unauthenticated") router.replace("/auth/signin");
+  }, [status, router]);
+
   const handleSave = async () => {
-    if (!name.trim()) { toast.error("Tu nombre es requerido"); return; }
+    if (status !== "authenticated" || !session?.user?.email) {
+      router.replace("/auth/signin");
+      return;
+    }
+    if (!name.trim()) { toast.error(t("requiredName")); return; }
     setSaving(true);
     try {
-      const res  = await fetch("/api/users/onboarding", {
+      const result = await safeFetchJson<{ data?: unknown; error?: string }>("/api/users/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, language: lang }),
-      });
-      if (!res.ok) throw new Error((await res.json()).error);
+      }, {});
+      if (!result.ok) throw new Error(result.error);
+
+      // Refresca el token JWT para que onboarded pase a true en la sesión
+      await update();
+
       setLanguage(lang);
       router.replace("/dashboard");
     } catch (err) {
@@ -31,6 +46,14 @@ export default function OnboardingPage() {
       setSaving(false);
     }
   };
+
+  if (status === "loading" || status === "unauthenticated") {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-bg">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-bg flex flex-col items-center justify-center px-6">
@@ -42,7 +65,6 @@ export default function OnboardingPage() {
         </div>
 
         <div className="flex flex-col gap-5">
-          {/* Name */}
           <div>
             <label className="text-xs font-semibold text-muted uppercase tracking-wide mb-2 block">
               {t("yourName")}
@@ -52,18 +74,17 @@ export default function OnboardingPage() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Oliver…"
+              placeholder={t("namePlaceholder")}
               className="w-full bg-surface border border-base rounded-2xl px-4 py-4 text-base focus:border-accent focus:outline-none placeholder:text-muted"
             />
           </div>
 
-          {/* Language */}
           <div>
             <label className="text-xs font-semibold text-muted uppercase tracking-wide mb-2 block">
               {t("preferredLanguage")}
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              {([["es", "🇪🇸", t("spanish")], ["en", "🇬🇧", t("english")]] as [Language, string, string][]).map(([code, flag, label]) => (
+            <div className="grid grid-cols-1 gap-3">
+              {([['es', '🇪🇸', 'Español']] as [Language, string, string][]).map(([code, flag, label]) => (
                 <button
                   key={code}
                   onClick={() => setLang(code)}

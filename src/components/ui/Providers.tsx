@@ -5,6 +5,56 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import { useState, useEffect } from "react";
 import { useAppStore } from "@/store";
+import { useSession } from "next-auth/react";
+import { safeFetchJson } from "@/lib/safe-fetch";
+import { User } from "@/types";
+import { SpotRealtimeBridge } from "@/components/ui/SpotRealtimeBridge";
+
+function CurrentUserSync() {
+  const { status } = useSession();
+  const setUser = useAppStore((state) => state.setUser);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    let active = true;
+
+    const syncUser = async () => {
+      const response = await safeFetchJson<{ data: User | null }>("/api/users/me", { cache: "no-store" }, { data: null });
+      if (!active || !response.ok || !response.data.data) return;
+
+      const freshUser = response.data.data;
+      const currentUser = useAppStore.getState().user;
+      const synchronizedUser = currentUser?.email === freshUser.email
+        ? { ...freshUser, theme: currentUser.theme }
+        : freshUser;
+      const fieldsToCompare: (keyof User)[] = [
+        "id", "name", "email", "image", "role", "points", "karmaScore",
+        "stars", "isVerified", "language", "theme", "accentColor", "customMarker", "onboarded",
+      ];
+      if (!currentUser || fieldsToCompare.some((field) => currentUser[field] !== synchronizedUser[field])) {
+        setUser(synchronizedUser);
+      }
+    };
+
+    const syncWhenVisible = () => {
+      if (document.visibilityState === "visible") void syncUser();
+    };
+
+    void syncUser();
+    window.addEventListener("focus", syncWhenVisible);
+    document.addEventListener("visibilitychange", syncWhenVisible);
+    const intervalId = window.setInterval(syncUser, 15000);
+
+    return () => {
+      active = false;
+      window.removeEventListener("focus", syncWhenVisible);
+      document.removeEventListener("visibilitychange", syncWhenVisible);
+      window.clearInterval(intervalId);
+    };
+  }, [status, setUser]);
+
+  return null;
+}
 
 function AccentInjector() {
   const accentColor = useAppStore((s) => s.accentColor);
@@ -28,6 +78,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={qc}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
           <AccentInjector />
+          <CurrentUserSync />
+          <SpotRealtimeBridge />
           {children}
           <Toaster
             position="top-center"

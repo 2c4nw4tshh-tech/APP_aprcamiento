@@ -1,142 +1,191 @@
 "use client";
-import { useEffect, useRef } from "react";
+
+import Map, { Marker, NavigationControl } from "react-map-gl";
+import type { MapRef } from "react-map-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { MapPin, RefreshCw } from "lucide-react";
+import { useRef, useState } from "react";
 import { NearbySpot } from "@/types";
 import { useAppStore } from "@/store";
+import { MAP_STYLES, NAVIGATION_BLUE } from "@/types/map";
+import { useMapStyles } from "@/hooks/useMapStyles";
+import { MapStylePicker } from "@/components/map/MapStylePicker";
+import { useInAppNavigation } from "@/hooks/useInAppNavigation";
+import { RouteCard } from "@/components/map/RouteCard";
+import { LatLng } from "@/types/navigation";
 
-interface Props {
-  center: [number, number];
-  spots: NearbySpot[];
-  onSpotClick: (spot: NearbySpot) => void;
+interface SpotMapProps {
+  center?: [number, number];
+  spots?: NearbySpot[] | null;
+  onSpotClick?: (spot: NearbySpot) => void;
+  pickMode?: boolean;
+  onMapPick?: (latitude: number, longitude: number) => void;
+  locationWarning?: string;
+  navigationOrigin?: LatLng | null;
+  navigationDestination?: LatLng | null;
+  navigationLabel?: string;
+  onClearNavigation?: () => void;
 }
 
-export function SpotMap({ center, spots, onSpotClick }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef       = useRef<unknown>(null);
-  const accentColor  = useAppStore((s) => s.accentColor);
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
+const DEFAULT_CENTER: [number, number] = [40.416775, -3.70379];
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (mapRef.current)             return;
-    if (!containerRef.current)      return;
+function transformMapboxRequest(url: string) {
+  if (url.startsWith("http://") && /(^|\.)tiles\.mapbox\.com\//.test(url.slice("http://".length))) {
+    return { url: url.replace(/^http:\/\//, "https://") };
+  }
+  return { url };
+}
 
-    // Importamos Leaflet solo en cliente
-    import("leaflet").then((L) => {
-      // Arregla iconos rotos por webpack
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        iconUrl:       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        shadowUrl:     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      });
+export default function SpotMap({
+  center = DEFAULT_CENTER,
+  spots,
+  onSpotClick,
+  pickMode = false,
+  onMapPick,
+  locationWarning,
+  navigationOrigin,
+  navigationDestination,
+  navigationLabel,
+  onClearNavigation,
+}: SpotMapProps) {
+  const t = useAppStore((store) => store.t);
+  const mapRef = useRef<MapRef>(null);
+  const [mapInstance, setMapInstance] = useState<MapRef | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [mapReady, setMapReady] = useState(false);
+  const [mapAttempt, setMapAttempt] = useState(0);
+  const { styleId, initialStyleId, selectStyle } = useMapStyles(mapInstance, mapReady);
+  const inAppNavigation = useInAppNavigation(
+    mapInstance,
+    mapReady,
+    navigationOrigin ?? null,
+    navigationDestination ?? null,
+    MAPBOX_TOKEN,
+  );
+  const safeCenter = Array.isArray(center) && center.length === 2 && center.every(Number.isFinite)
+    ? center
+    : DEFAULT_CENTER;
+  const safeSpots = Array.isArray(spots)
+    ? spots.filter((spot) => Number.isFinite(spot?.latitude) && Number.isFinite(spot?.longitude))
+    : [];
+  const retryMap = () => {
+    setMapError(null);
+    setMapReady(false);
+    setMapAttempt((attempt) => attempt + 1);
+  };
 
-      const map = L.map(containerRef.current!, {
-        zoomControl:        false,
-        attributionControl: false,
-      }).setView(center, 16);
-
-      // Tiles CartoDB Voyager (funciona bien en claro y oscuro)
-      L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-        { subdomains: "abcd", maxZoom: 19 }
-      ).addTo(map);
-
-      // Control de zoom arriba a la derecha
-      L.control.zoom({ position: "topright" }).addTo(map);
-
-      // Marcador del usuario
-      const userIcon = L.divIcon({
-        html: `<div style="
-          width:14px;height:14px;
-          background:${accentColor};
-          border-radius:50%;
-          border:3px solid white;
-          box-shadow:0 0 0 3px ${accentColor}44;
-        "></div>`,
-        className:  "",
-        iconAnchor: [7, 7],
-      });
-      L.marker(center, { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
-
-      // Marcadores de spots
-      spots.forEach((spot) => {
-        const color = spot.isLeaving ? "#FACC15" : "#22C55E";
-        const icon  = L.divIcon({
-          html: `<div style="
-            width:30px;height:30px;
-            background:${color};
-            border-radius:50% 50% 50% 0;
-            transform:rotate(-45deg);
-            border:3px solid white;
-            box-shadow:0 2px 8px rgba(0,0,0,0.25);
-            display:flex;align-items:center;justify-content:center;
-          ">
-            <span style="transform:rotate(45deg);font-size:12px;font-weight:700;color:#111;">P</span>
-          </div>`,
-          className:  "",
-          iconAnchor: [15, 30],
-        });
-
-        const marker = L.marker([spot.latitude, spot.longitude], { icon });
-        marker.bindTooltip(
-          `${spot.minutesAgo}min · ${spot.locationDesc ?? ""}`,
-          { direction: "top", offset: [0, -32], className: "spot-tooltip" }
-        );
-        marker.on("click", () => onSpotClick(spot));
-        marker.addTo(map);
-      });
-
-      mapRef.current = map;
-    });
-
-    // Cleanup al desmontar
-    return () => {
-      if (mapRef.current) {
-        (mapRef.current as { remove: () => void }).remove();
-        mapRef.current = null;
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  if (!MAPBOX_TOKEN || mapError) {
+    return (
+      <div className="relative flex h-full min-h-[350px] w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border border-base bg-bg px-6 text-center">
+        <MapPin size={28} className="text-accent" />
+        <p className="text-sm text-muted">
+          {!MAPBOX_TOKEN ? t("mapNotConfigured") : t("mapLoadFailed")}
+        </p>
+        <button
+          type="button"
+          onClick={!MAPBOX_TOKEN ? () => window.location.reload() : retryMap}
+          className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-[var(--accent-fg)]"
+        >
+          <RefreshCw size={15} />
+          {t("retryMap")}
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <>
-      {/* CSS de Leaflet cargado inline para garantizar que llega en producción */}
-      <style>{`
-        @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+    <div className="w-full h-full min-h-[350px] rounded-2xl overflow-hidden relative z-0 border border-base">
+      {locationWarning && (
+        <div className="absolute inset-x-4 top-4 z-10 rounded-2xl border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 backdrop-blur-sm">
+          <p className="text-[11px] leading-snug text-yellow-700 dark:text-yellow-200">⚠️ {locationWarning}</p>
+        </div>
+      )}
 
-        .leaflet-container {
-          width: 100% !important;
-          height: 100% !important;
-          position: absolute !important;
-          inset: 0 !important;
-          background: var(--bg) !important;
-        }
-        .spot-tooltip {
-          background: var(--surface);
-          border: 1px solid var(--border);
-          color: var(--text);
-          border-radius: 10px;
-          font-size: 12px;
-          font-weight: 600;
-          padding: 4px 10px;
-          white-space: nowrap;
-        }
-        .leaflet-tooltip-top::before {
-          border-top-color: var(--border);
-        }
-      `}</style>
-
-      {/* Contenedor del mapa — necesita dimensiones explícitas */}
-      <div
-        ref={containerRef}
-        style={{
-          position: "absolute",
-          inset:    0,
-          width:    "100%",
-          height:   "100%",
+      <Map
+        key={mapAttempt}
+        ref={mapRef}
+        mapboxAccessToken={MAPBOX_TOKEN}
+        transformRequest={transformMapboxRequest}
+        initialViewState={{
+          latitude: safeCenter[0],
+          longitude: safeCenter[1],
+          zoom: 15,
         }}
-      />
-    </>
+        style={{ width: "100%", height: "100%" }}
+        mapStyle={MAP_STYLES[initialStyleId].style}
+        onLoad={() => {
+          setMapInstance(mapRef.current);
+          setMapReady(true);
+        }}
+        onRender={() => {
+          if (!mapReady && mapRef.current) {
+            setMapInstance(mapRef.current);
+            setMapReady(true);
+          }
+        }}
+        onStyleData={() => {
+          const currentMap = mapRef.current;
+          if (currentMap) {
+            setMapInstance(currentMap);
+            setMapReady(true);
+          }
+        }}
+        onError={(event) => setMapError(event.error?.message ?? "No se pudo inicializar Mapbox.")}
+        onClick={(event) => {
+          if (pickMode) onMapPick?.(event.lngLat.lat, event.lngLat.lng);
+        }}
+      >
+        <NavigationControl position="bottom-right" />
+
+        <Marker latitude={safeCenter[0]} longitude={safeCenter[1]}>
+          <div className="relative flex items-center justify-center">
+            <div className="h-5 w-5 animate-pulse rounded-full border-2 border-white shadow-lg" style={{ backgroundColor: NAVIGATION_BLUE }} />
+            <div className="absolute h-10 w-10 animate-ping rounded-full" style={{ backgroundColor: `${NAVIGATION_BLUE}40` }} />
+          </div>
+        </Marker>
+
+        {safeSpots.map((spot) => (
+          <Marker
+            key={spot.id}
+            latitude={spot.latitude}
+            longitude={spot.longitude}
+            onClick={() => onSpotClick?.(spot)}
+          >
+            <div className="relative flex flex-col items-center cursor-pointer hover:scale-110 transition-transform">
+              <div className="flex items-center justify-center rounded-full border-2 border-[#4285F4] bg-white p-2 text-2xl shadow-xl">
+                {spot.leaver?.customMarker ?? "📍"}
+              </div>
+              {(spot.countdownMinutes ?? 0) > 0 && (
+                <span className="mt-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                  {spot.countdownMinutes ?? 0} min
+                </span>
+              )}
+            </div>
+          </Marker>
+        ))}
+      </Map>
+      {mapReady && <MapStylePicker value={styleId} onChange={selectStyle} />}
+      {navigationOrigin && navigationDestination && (
+        <RouteCard
+          route={inAppNavigation.route}
+          origin={navigationOrigin}
+          destination={navigationDestination}
+          destinationLabel={navigationLabel}
+          loading={inAppNavigation.loading}
+          error={inAppNavigation.error}
+          onClose={() => {
+            inAppNavigation.clearNavigation();
+            onClearNavigation?.();
+          }}
+        />
+      )}
+      {!mapReady && (
+        <div className="absolute inset-0 z-[5] flex flex-col items-center justify-center gap-3 bg-bg/95">
+          <div className="w-9 h-9 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+          <p className="text-sm text-muted">{t("mapLoading")}</p>
+        </div>
+      )}
+    </div>
   );
 }

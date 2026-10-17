@@ -11,11 +11,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router   = useRouter();
   const pathname = usePathname();
   const setUser  = useAppStore((s) => s.setUser);
-  const redirected = useRef(false); // evita doble redirect
+  const redirected = useRef(false);
 
   useEffect(() => {
-    if (status === "loading")   return;
-    if (redirected.current)     return;
+    if (status === "loading") return;
+    if (redirected.current)  return;
 
     if (status === "unauthenticated" && !PUBLIC.includes(pathname)) {
       redirected.current = true;
@@ -26,24 +26,25 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (status === "authenticated" && session?.user) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const u = session.user as any;
-      setUser(u);
+      const currentUser = useAppStore.getState().user;
+      const sameAccount = currentUser?.email === u.email;
+      if (!sameAccount) setUser(u);
 
-      // Si está en signin con sesión activa → redirigir
       if (pathname === "/auth/signin") {
         redirected.current = true;
         router.replace(u.onboarded ? "/dashboard" : "/auth/onboarding");
         return;
       }
 
-      // Si no ha hecho onboarding y no está en esa página
-      if (!u.onboarded && pathname !== "/auth/onboarding") {
+      // Solo redirigir a onboarding si onboarded es EXACTAMENTE false (boolean)
+      // Evita redirigir mientras el token aún no se ha refrescado (undefined)
+      if (u.onboarded === false && pathname !== "/auth/onboarding") {
         redirected.current = true;
         router.replace("/auth/onboarding");
       }
     }
   }, [status, session, pathname]); // eslint-disable-line
 
-  // Reset del ref cuando cambia la ruta
   useEffect(() => {
     redirected.current = false;
   }, [pathname]);
@@ -56,8 +57,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (PUBLIC.includes(pathname))        return <>{children}</>;
-  if (status === "unauthenticated")     return null;
+  if (PUBLIC.includes(pathname))    return <>{children}</>;
+  if (status === "unauthenticated") return null;
 
   return <>{children}</>;
 }

@@ -2,8 +2,10 @@
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAppStore } from "@/store";
 
 export default function SignInPage() {
+  const t = useAppStore((state) => state.t);
   const { status } = useSession();
   const router     = useRouter();
   const [email, setEmail]     = useState("");
@@ -24,21 +26,26 @@ export default function SignInPage() {
   }
 
   const handleSignIn = async () => {
-    if (!email.trim()) { setError("Introduce tu email para continuar"); return; }
+    if (!email.trim()) { setError(t("enterEmail")); return; }
     setLoading(true);
     setError("");
 
-    const result = await signIn("credentials", {
-      email: email.trim(),
-      redirect: false, // manejamos la redirección manualmente
-    });
+    try {
+      const result = await signIn("credentials", {
+        email: email.trim(),
+        redirect: false,
+      });
 
-    if (result?.error) {
-      setError("No se pudo iniciar sesión. Inténtalo de nuevo.");
-      setLoading(false);
-    } else {
-      // Redirigimos nosotros; AuthGuard se encarga del onboarding check
+      if (result?.error || !result) {
+        setError(t("signInFailed"));
+        return;
+      }
+
       router.replace("/dashboard");
+    } catch {
+      setError(t("signInFailed"));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,14 +58,14 @@ export default function SignInPage() {
           <h1 className="font-display font-bold text-3xl">
             Spot<span className="text-accent">Sync</span>
           </h1>
-          <p className="text-muted text-sm mt-2">Aparcamiento urbano, reimaginado</p>
+          <p className="text-muted text-sm mt-2">{t("signInSubtitle")}</p>
         </div>
 
         {/* Email input */}
         <div className="flex flex-col gap-4">
           <div>
             <label className="text-xs font-semibold text-muted uppercase tracking-wide mb-2 block">
-              Tu email
+              {t("yourEmail")}
             </label>
             <input
               type="email"
@@ -79,7 +86,7 @@ export default function SignInPage() {
           >
             {loading
               ? <span className="w-5 h-5 rounded-full border-2 border-current border-t-transparent animate-spin" />
-              : "Entrar →"
+              : t("signInButton")
             }
           </button>
         </div>
@@ -87,13 +94,13 @@ export default function SignInPage() {
         {/* Nota de demo */}
         <div className="mt-6 bg-surface border border-base rounded-2xl px-4 py-3">
           <p className="text-xs text-muted text-center leading-relaxed">
-            Modo desarrollo — cualquier email válido crea una cuenta automáticamente.<br/>
-            <span className="text-accent font-semibold">Prueba: demo@spotsync.com</span>
+            {t("demoMode")}<br/>
+            <span className="text-accent font-semibold">{t("demoAddress")}</span>
           </p>
         </div>
 
         <p className="text-center text-xs text-muted mt-6">
-          Cuando configures Google OAuth, el botón de Google aparecerá aquí.
+          {t("oauthNote")}
         </p>
       </div>
     </div>
