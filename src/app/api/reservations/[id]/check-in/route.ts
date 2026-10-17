@@ -77,7 +77,7 @@ export async function POST(_request: Request, { params }: { params: { id: string
     if (error instanceof Error && error.message === "SPOT_NOT_RESERVED") {
       return NextResponse.json({ success: false, error: "La plaza ya no está bloqueada para esta reserva." }, { status: 409 });
     }
-    console.error("API Error:", error, "[POST /api/reservations/:id/check-in]");
-    return NextResponse.json({ success: false, error: "No se pudo completar el check-in." }, { status: 500 });
+    console.error("API Error: fallo en check-in de reserva", { reservationId: params?.id, error }, "[POST /api/reservations/:id/check-in]");
+    return NextResponse.json({ success: false, error: "No se pudo completar el check-in. Comprueba la reserva e inténtalo de nuevo." }, { status: 400 });
   }
 }

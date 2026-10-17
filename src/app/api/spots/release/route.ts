@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { spotExpiresAt } from "@/lib/gis";
@@ -91,7 +92,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: result.spot, pointsEarned: POINTS_PER_RELEASE, user: result.user });
   } catch (error) {
-    console.error("API Error:", error, "[POST /api/spots/release]");
-    return NextResponse.json({ success: false, data: null, error: "No se pudo publicar el aparcamiento. Inténtalo de nuevo." }, { status: 500 });
+    const diagnostic = error instanceof Prisma.PrismaClientKnownRequestError
+      ? { code: error.code, meta: error.meta }
+      : { type: error instanceof Error ? error.name : "UnknownError", message: error instanceof Error ? error.message : String(error) };
+    console.error("API Error: fallo al publicar plaza", diagnostic, error, "[POST /api/spots/release]");
+    return NextResponse.json(
+      { success: false, data: null, error: "No se pudo guardar el aparcamiento. Revisa los datos e inténtalo de nuevo." },
+      { status: 400 },
+    );
   }
 }

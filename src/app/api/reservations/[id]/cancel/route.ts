@@ -55,7 +55,7 @@ export async function POST(_request: Request, { params }: { params: { id: string
     if (error instanceof Error && error.message === "RESERVATION_NOT_CANCELLABLE") {
       return NextResponse.json({ success: false, error: "La reserva ya no se puede cancelar." }, { status: 409 });
     }
-    console.error("API Error:", error, "[POST /api/reservations/:id/cancel]");
-    return NextResponse.json({ success: false, error: "No se pudo cancelar la reserva." }, { status: 500 });
+    console.error("API Error: fallo al cancelar reserva", { reservationId: params?.id, error }, "[POST /api/reservations/:id/cancel]");
+    return NextResponse.json({ success: false, error: "No se pudo cancelar la reserva. Inténtalo de nuevo." }, { status: 400 });
   }
 }
