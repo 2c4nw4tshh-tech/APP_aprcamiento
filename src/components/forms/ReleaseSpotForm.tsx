@@ -56,7 +56,7 @@ export function ReleaseSpotForm() {
 
   const handleSubmit = async () => {
     if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) {
-      toast.error(t("enableLocation"));
+      toast.error("Esperando señal de ubicación...");
       getLocation();
       return;
     }
@@ -75,12 +75,14 @@ export function ReleaseSpotForm() {
         releaseDelayMinutes: form.isLeaving ? releaseDelay : 0,
         moreSpotsNearby: hasMoreSpots ? moreSpotsCount : 0,
       };
+      console.log("[release] enviando payload", payload);
       const result = await safeFetchJson<{ data?: Spot; pointsEarned?: number; user?: User; error?: string }>("/api/spots/release", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }, {});
       const releasedSpot = result.data.data;
+      console.log("[release] respuesta", result.ok, result.data);
       if (!result.ok || !releasedSpot) {
         console.error("[release] respuesta de la API", result);
         const details = (result.data as { details?: unknown }).details;
@@ -96,8 +98,10 @@ export function ReleaseSpotForm() {
       toast.success(t("spotReleased", { n: json.pointsEarned ?? 10 }));
       router.push("/release/broadcasting");
     } catch (err) {
-      console.error("Error al liberar:", err);
-      toast.error((err as Error).message);
+      console.error("ERROR COMPLETO AL LIBERAR:", JSON.stringify(err, Object.getOwnPropertyNames(err ?? {}), 2));
+      const message = err instanceof Error ? err.message : JSON.stringify(err);
+      toast.error(message);
+      window.alert(`Error detallado: ${message}`); // temporal: depuración
     } finally {
       setSubmitting(false);
     }

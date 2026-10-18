@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { spotExpiresAt } from "@/lib/gis";
+import { encodeMoreSpots, decodeMoreSpots } from "@/lib/more-spots";
 import { ReleaseSpotPayload } from "@/types";
 
 const POINTS_PER_RELEASE = 10;
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest) {
     if (user.isBanned) return NextResponse.json({ success: false, error: "La cuenta está suspendida." }, { status: 403 });
 
     const availableAt = new Date(Date.now() + delayMinutes * 60000);
+    console.log("[release] insertando", { userId: user.id, latitude, longitude, delayMinutes, moreSpots });
     const result = await prisma.$transaction(async (tx) => {
       const oldSpots = await tx.spot.findMany({
         where: { leaverId: user.id, status: "AVAILABLE" },
@@ -62,13 +64,12 @@ export async function POST(req: NextRequest) {
           latitude,
           longitude,
           locationDesc: locationDesc?.trim() || null,
-          notes: notes?.trim() || null,
+          notes: encodeMoreSpots(notes, moreSpots),
           vehicleSize: vehicleSize ?? "COMPACT",
           spotSize: spotSize ?? "MEDIUM",
           parkingType: parkingType ?? "PARALLEL",
           zoneType: zoneType ?? "FREE",
           isLeaving: isLeaving ?? false,
-          moreSpotsNearby: moreSpots,
           availableAt,
           expiresAt: spotExpiresAt(2),
         },
@@ -96,12 +97,12 @@ export async function POST(req: NextRequest) {
       return { spot, user: updatedUser };
     });
 
-    return NextResponse.json({ success: true, data: result.spot, pointsEarned: POINTS_PER_RELEASE, user: result.user });
+    return NextResponse.json({ success: true, data: decodeMoreSpots(result.spot), pointsEarned: POINTS_PER_RELEASE, user: result.user });
   } catch (error) {
     const diagnostic = error instanceof Prisma.PrismaClientKnownRequestError
       ? { code: error.code, meta: error.meta }
       : { type: error instanceof Error ? error.name : "UnknownError", message: error instanceof Error ? error.message : String(error) };
-    console.error("API Error: fallo al publicar plaza", diagnostic, error, "[POST /api/spots/release]");
+    console.error("DATABASE_INSERT_ERROR:", diagnostic, error, "[POST /api/spots/release]");
     return NextResponse.json(
       { success: false, data: null, error: "No se pudo guardar el aparcamiento. Revisa los datos e inténtalo de nuevo.", ...(process.env.DEBUG_API_ERRORS === "true" ? { details: diagnostic } : {}) },
       { status: 400 },

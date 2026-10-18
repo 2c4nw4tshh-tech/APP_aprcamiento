@@ -110,7 +110,6 @@ model Spot {
   parkingType  String    @default("PARALLEL")
   zoneType     String    @default("FREE")
   isLeaving    Boolean   @default(false)
-  moreSpotsNearby Int    @default(0)
   availableAt  DateTime  @default(now())
   expiresAt    DateTime
   occupiedAt   DateTime?

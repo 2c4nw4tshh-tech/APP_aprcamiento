@@ -20,14 +20,17 @@ async function main() {
           parkingType: "PARALLEL",
           zoneType: "FREE",
           isLeaving: false,
-          moreSpotsNearby: 0,
           availableAt: new Date(),
           expiresAt: new Date(Date.now() + 2 * 3600 * 1000),
         },
+        select: { id: true, latitude: true, longitude: true },
       });
       await tx.parkingSpot.create({
         data: { ownerId: user.id, legacySpotId: spot.id, lat: spot.latitude, lng: spot.longitude, status: "DISPONIBLE" },
       });
+      await tx.user.update({ where: { id: user.id }, data: { points: { increment: 10 } } });
+      await tx.pointLedger.create({ data: { userId: user.id, amount: 10, type: "SPOT_RELEASE", reference: spot.id } });
+      await tx.spot.findMany({ where: { leaverId: user.id, status: "AVAILABLE" }, select: { id: true } });
       console.log("OK: inserción válida, se revierte la transacción.");
       throw new Error(ROLLBACK);
     });

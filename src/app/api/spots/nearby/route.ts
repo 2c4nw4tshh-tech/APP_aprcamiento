@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { haversineDistance, minutesAgo } from "@/lib/gis";
+import { decodeMoreSpots } from "@/lib/more-spots";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
 
     const nearby = spots
       .map((s) => ({
-        ...s,
+        ...decodeMoreSpots(s),
         distance: haversineDistance(lat, lng, s.latitude, s.longitude),
         minutesAgo: minutesAgo(s.createdAt),
         countdownMinutes: Math.max(0, Math.ceil((new Date(s.availableAt).getTime() - Date.now()) / 60000)),

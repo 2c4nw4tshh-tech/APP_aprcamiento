@@ -1,1 +1,0 @@
-ALTER TABLE "spots" ADD COLUMN "moreSpotsNearby" INTEGER NOT NULL DEFAULT 0;
