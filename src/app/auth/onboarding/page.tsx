@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useAppStore } from "@/store";
 import { Button } from "@/components/ui/Button";
+import { GlobalLoader } from "@/components/ui/GlobalLoader";
 import { Language } from "@/types";
 import toast from "react-hot-toast";
 import { safeFetchJson } from "@/lib/safe-fetch";
@@ -17,12 +18,12 @@ export default function OnboardingPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated") router.replace("/auth/signin");
+    if (status === "unauthenticated") router.replace("/login");
   }, [status, router]);
 
   const handleSave = async () => {
     if (status !== "authenticated" || !session?.user?.email) {
-      router.replace("/auth/signin");
+      router.replace("/login");
       return;
     }
     if (!name.trim()) { toast.error(t("requiredName")); return; }
@@ -48,11 +49,7 @@ export default function OnboardingPage() {
   };
 
   if (status === "loading" || status === "unauthenticated") {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-bg">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-      </div>
-    );
+    return <GlobalLoader />;
   }
 
   return (

@@ -3,8 +3,9 @@ import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { useAppStore } from "@/store";
+import { GlobalLoader } from "@/components/ui/GlobalLoader";
 
-const PUBLIC = ["/auth/signin", "/auth/onboarding"];
+const PUBLIC = ["/login", "/auth/signin", "/auth/onboarding"];
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
@@ -19,7 +20,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     if (status === "unauthenticated" && !PUBLIC.includes(pathname)) {
       redirected.current = true;
-      router.replace("/auth/signin");
+      router.replace("/login");
       return;
     }
 
@@ -30,7 +31,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       const sameAccount = currentUser?.email === u.email;
       if (!sameAccount) setUser(u);
 
-      if (pathname === "/auth/signin") {
+      if (pathname === "/login" || pathname === "/auth/signin") {
         redirected.current = true;
         router.replace(u.onboarded ? "/dashboard" : "/auth/onboarding");
         return;
@@ -50,11 +51,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   if (status === "loading") {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-bg">
-        <div className="w-10 h-10 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-      </div>
-    );
+    return <GlobalLoader />;
   }
 
   if (PUBLIC.includes(pathname))    return <>{children}</>;

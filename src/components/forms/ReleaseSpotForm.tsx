@@ -4,10 +4,9 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useAppStore } from "@/store";
 import { useGeolocation } from "@/hooks/useGeolocation";
-import { Button } from "@/components/ui/Button";
 import { VehicleSize, ParkingType, ZoneType, SpotSize, Spot, User } from "@/types";
 import toast from "react-hot-toast";
-import { MapPin, Car, Layers, AlignLeft, Clock, TimerReset } from "lucide-react";
+import { MapPin, Car, Layers, AlignLeft, Clock, TimerReset, LoaderCircle } from "lucide-react";
 import { safeFetchJson } from "@/lib/safe-fetch";
 
 export function ReleaseSpotForm() {
@@ -89,19 +88,19 @@ export function ReleaseSpotForm() {
         <label className="section-label"><MapPin size={12} /> {t("allowLocation")}</label>
         <button
           onClick={getLocation}
-          className="w-full flex items-center gap-3 bg-surface2 border border-base rounded-2xl px-4 py-3 text-left"
+          style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", borderRadius: "16px" }}
+          className="flex w-full items-center gap-3 px-4 py-3 text-left"
         >
-          <MapPin size={16} className={coords ? "text-accent" : "text-muted"} />
+          <MapPin size={16} style={{ color: coords ? "#10B981" : "var(--muted)" }} />
           <span className="text-sm">
             {locLoading ? "…" : coords ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` : t("allowLocation")}
           </span>
         </button>
         <input
-          type="text"
           placeholder={t("locationExample")}
           value={form.locationDesc}
           onChange={(e) => toggle("locationDesc", e.target.value)}
-          className="mt-2 w-full bg-surface2 border border-base rounded-2xl px-4 py-3 text-sm placeholder:text-muted focus:border-accent focus:outline-none"
+          className="mt-2 w-full rounded-2xl border border-base bg-surface2 px-4 py-3 text-sm placeholder:text-muted focus:border-accent focus:outline-none"
         />
       </section>
 
@@ -125,11 +124,12 @@ export function ReleaseSpotForm() {
             <button
               key={String(val)}
               onClick={() => toggle("isLeaving", val)}
-              className={`flex-1 rounded-2xl py-3 text-sm font-semibold border transition-colors ${
-                form.isLeaving === val
-                  ? val ? "bg-yellow-400 border-yellow-400 text-yellow-900" : "bg-accent border-accent text-[var(--accent-fg)]"
-                  : "bg-surface2 border-base text-muted"
-              }`}
+                style={form.isLeaving === val
+                  ? val
+                    ? { backgroundColor: "#FEF3C7", border: "1px solid #F59E0B", color: "#92400E", borderRadius: "16px" }
+                    : { backgroundColor: "#DCFCE7", border: "1px solid #10B981", color: "#166534", borderRadius: "16px" }
+                  : { backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: "16px" }}
+                className="flex-1 py-3 text-sm font-semibold transition-colors"
             >
               {val ? `🟡 ${t("iAmLeaving")}` : `🟢 ${t("available")}`}
             </button>
@@ -143,7 +143,10 @@ export function ReleaseSpotForm() {
         <div className="grid grid-cols-2 gap-2">
           {vehicleOptions.map(({ value, label }) => (
             <button key={value} onClick={() => toggle("vehicleSize", value)}
-              className={`rounded-xl py-3 text-sm font-semibold border transition-colors ${form.vehicleSize === value ? "bg-accent border-accent text-[var(--accent-fg)]" : "bg-surface2 border-base text-muted"}`}>
+              style={form.vehicleSize === value
+                  ? { backgroundColor: "#DBEAFE", border: "1px solid #3B82F6", color: "#1D4ED8", borderRadius: "12px" }
+                  : { backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: "12px" }}
+                className="py-3 text-sm font-semibold transition-colors">
               {label}
             </button>
           ))}
@@ -156,7 +159,10 @@ export function ReleaseSpotForm() {
         <div className="grid grid-cols-3 gap-2">
           {zoneOptions.map(({ value, label }) => (
             <button key={value} onClick={() => toggle("zoneType", value)}
-              className={`rounded-xl py-2.5 text-sm font-semibold border transition-colors ${form.zoneType === value ? "bg-accent border-accent text-[var(--accent-fg)]" : "bg-surface2 border-base text-muted"}`}>
+              style={form.zoneType === value
+                  ? { backgroundColor: "#DBEAFE", border: "1px solid #3B82F6", color: "#1D4ED8", borderRadius: "12px" }
+                  : { backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: "12px" }}
+                className="py-2.5 text-sm font-semibold transition-colors">
               {label}
             </button>
           ))}
@@ -169,7 +175,10 @@ export function ReleaseSpotForm() {
         <div className="grid grid-cols-3 gap-2">
           {spotSizeOptions.map(({ value, label }) => (
             <button key={value} onClick={() => toggle("spotSize", value)}
-              className={`rounded-xl py-2.5 text-sm font-semibold border transition-colors ${form.spotSize === value ? "bg-accent border-accent text-[var(--accent-fg)]" : "bg-surface2 border-base text-muted"}`}>
+              style={form.spotSize === value
+                  ? { backgroundColor: "#DBEAFE", border: "1px solid #3B82F6", color: "#1D4ED8", borderRadius: "12px" }
+                  : { backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: "12px" }}
+                className="py-2.5 text-sm font-semibold transition-colors">
               {label}
             </button>
           ))}
@@ -182,16 +191,26 @@ export function ReleaseSpotForm() {
         <div className="grid gap-2">
           {timeOptions.map(({ value, label }) => (
             <button key={value} onClick={() => setReleaseDelay(value)}
-              className={`rounded-2xl py-3 text-sm font-semibold border transition-colors ${releaseDelay === value ? "bg-accent border-accent text-[var(--accent-fg)]" : "bg-surface2 border-base text-muted"}`}>
+              style={releaseDelay === value
+                  ? { backgroundColor: "#DBEAFE", border: "1px solid #3B82F6", color: "#1D4ED8", borderRadius: "16px" }
+                  : { backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: "16px" }}
+                className="py-3 text-sm font-semibold transition-colors">
               {label}
             </button>
           ))}
         </div>
       </section>
 
-      <Button variant="success" size="lg" onClick={handleSubmit} loading={submitting} className="min-h-14 rounded-2xl text-base font-bold">
-        ⚡ {t("broadcastSpot")}
-      </Button>
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={submitting}
+        style={{ backgroundColor: "#10B981", color: "#FFFFFF", borderRadius: "16px", boxShadow: "0px 4px 16px rgba(16, 185, 129, 0.35)" }}
+        className="inline-flex min-h-14 w-full items-center justify-center gap-2 px-6 py-4 text-base font-bold disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {submitting ? <LoaderCircle size={18} className="animate-spin" /> : "⚡"}
+        {t("broadcastSpot")}
+      </button>
     </div>
   );
 }

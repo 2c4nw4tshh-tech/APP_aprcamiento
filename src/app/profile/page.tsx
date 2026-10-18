@@ -1,5 +1,6 @@
 "use client";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { AuthGuard } from "@/components/ui/AuthGuard";
@@ -10,6 +11,15 @@ import Link from "next/link";
 export default function ProfilePage() {
   const { user, t } = useAppStore();
   const u = user;
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    // redirect:false evita la navegación interna de NextAuth (y errores de CSRF/callback)
+    await signOut({ redirect: false });
+    useAppStore.getState().setUser(null);
+    router.replace("/login");
+    router.refresh();
+  };
 
   return (
     <AuthGuard>
@@ -58,7 +68,7 @@ export default function ProfilePage() {
               <span className="text-accent text-xs font-semibold">{u?.points ?? 0} pts</span>
             </Link>
             <button
-              onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+              onClick={handleSignOut}
               className="flex items-center gap-3 bg-surface border border-red-200 dark:border-red-900 rounded-2xl px-4 py-4 mt-2"
             >
               <LogOut size={18} className="text-red-500" />

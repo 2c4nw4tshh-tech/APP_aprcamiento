@@ -7,6 +7,7 @@ import { MapPin, RefreshCw } from "lucide-react";
 import { useRef, useState } from "react";
 import { NearbySpot } from "@/types";
 import { useAppStore } from "@/store";
+import { GlobalLoader } from "@/components/ui/GlobalLoader";
 import { MAP_STYLES, NAVIGATION_BLUE } from "@/types/map";
 import { useMapStyles } from "@/hooks/useMapStyles";
 import { MapStylePicker } from "@/components/map/MapStylePicker";
@@ -85,7 +86,8 @@ export default function SpotMap({
         <button
           type="button"
           onClick={!MAPBOX_TOKEN ? () => window.location.reload() : retryMap}
-          className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-[var(--accent-fg)]"
+          style={{ backgroundColor: "#3B82F6", color: "#FFFFFF", borderRadius: "12px" }}
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold"
         >
           <RefreshCw size={15} />
           {t("retryMap")}
@@ -153,7 +155,7 @@ export default function SpotMap({
             onClick={() => onSpotClick?.(spot)}
           >
             <div className="relative flex flex-col items-center cursor-pointer hover:scale-110 transition-transform">
-              <div className="flex items-center justify-center rounded-full border-2 border-[#4285F4] bg-white p-2 text-2xl shadow-xl">
+              <div className="flex items-center justify-center rounded-full border-2 bg-white p-2 text-2xl shadow-xl" style={{ borderColor: NAVIGATION_BLUE }}>
                 {spot.leaver?.customMarker ?? "📍"}
               </div>
               {(spot.countdownMinutes ?? 0) > 0 && (
@@ -181,10 +183,7 @@ export default function SpotMap({
         />
       )}
       {!mapReady && (
-        <div className="absolute inset-0 z-[5] flex flex-col items-center justify-center gap-3 bg-bg/95">
-          <div className="w-9 h-9 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-          <p className="text-sm text-muted">{t("mapLoading")}</p>
-        </div>
+        <GlobalLoader fullScreen={false} label={t("mapLoading")} />
       )}
     </div>
   );

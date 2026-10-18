@@ -2,7 +2,6 @@
 import { NearbySpot } from "@/types";
 import { formatDistance } from "@/lib/gis";
 import { useAppStore } from "@/store";
-import { Button } from "@/components/ui/Button";
 import { NudgeBanner } from "@/components/ui/NudgeBanner";
 import { X, MapPin, Clock, Car, AlertTriangle, Star, Route } from "lucide-react";
 import { useState } from "react";
@@ -41,7 +40,10 @@ export function SpotDetailModal({ spot, onClose, onOccupied, onNavigateInApp, on
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className={`w-3 h-3 rounded-full ${spot.isLeaving ? "bg-yellow-400" : "bg-green-500"}`} />
+              <span
+                className="h-3 w-3 rounded-full"
+                style={{ backgroundColor: spot.isLeaving ? "#FACC15" : "#10B981" }}
+              />
               <span className="text-sm font-semibold">{spot.isLeaving ? t("iAmLeaving") : t("available")}</span>
             </div>
             <p className="text-base font-display font-bold text-lg mt-1 leading-tight">
@@ -114,18 +116,18 @@ export function SpotDetailModal({ spot, onClose, onOccupied, onNavigateInApp, on
             latitude={spot.latitude}
             longitude={spot.longitude}
             label={spot.locationDesc}
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold"
           />
         </div>
         {onNavigateInApp && (
-          <Button
-            variant="navigation"
-            size="sm"
+          <button
+            type="button"
             onClick={onNavigateInApp}
-            className="mt-2 w-full gap-2 rounded-2xl"
+            style={{ backgroundColor: "#3B82F6", color: "#FFFFFF", borderRadius: "16px", boxShadow: "0px 4px 16px rgba(59, 130, 246, 0.35)" }}
+            className="mt-2 inline-flex w-full items-center justify-center gap-2 px-4 py-2 text-sm font-semibold"
           >
             <Route size={15} /> {t("navigateInApp")}
-          </Button>
+          </button>
         )}
 
         {showShareNudge && (

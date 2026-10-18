@@ -191,7 +191,7 @@ export default function FindPage() {
                 longitude={destination.lng}
                 label={destination.label}
                 buttonLabel={t("navigateTo")}
-                className="flex shrink-0 items-center gap-1 rounded-lg bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                className="flex shrink-0 items-center gap-1 px-2 py-1 text-xs font-medium"
               />
             </div>
           )}

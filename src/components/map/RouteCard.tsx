@@ -5,6 +5,7 @@ import { getNavigationUrl, NavigationProvider } from "@/lib/gis";
 import { LatLng, RouteResult } from "@/types/navigation";
 import { useAppStore } from "@/store";
 import { NAVIGATION_BLUE } from "@/types/map";
+import { useTheme } from "next-themes";
 
 interface RouteCardProps {
   route: RouteResult | null;
@@ -32,6 +33,7 @@ export function RouteCard({
   onClose,
 }: RouteCardProps) {
   const t = useAppStore((state) => state.t);
+  const { resolvedTheme } = useTheme();
 
   const openExternalRoute = (provider: NavigationProvider) => {
     const url = getNavigationUrl(provider, origin, destination, destinationLabel);
@@ -48,7 +50,14 @@ export function RouteCard({
             {destinationLabel && <p className="max-w-[300px] truncate text-xs text-muted">{destinationLabel}</p>}
           </div>
         </div>
-        <button type="button" onClick={onClose} aria-label={t("cancelRoute")} title={t("cancelRoute")} className="rounded-lg bg-[#FEF2F2] p-2 text-[#DC2626] hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/70">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t("cancelRoute")}
+          title={t("cancelRoute")}
+          style={{ backgroundColor: resolvedTheme === "dark" ? "#450A0A" : "#FEF2F2", color: "#DC2626", borderRadius: "12px" }}
+          className="p-2"
+        >
           <X size={17} />
         </button>
       </header>
@@ -88,7 +97,13 @@ export function RouteCard({
               key={id}
               type="button"
               onClick={() => openExternalRoute(id)}
-              className="flex min-h-10 items-center justify-center gap-1 rounded-xl border border-gray-200 bg-gray-100 px-2 text-xs font-semibold text-gray-700 hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              style={{
+                backgroundColor: resolvedTheme === "dark" ? "#1F2937" : "#F3F4F6",
+                color: resolvedTheme === "dark" ? "#F3F4F6" : "#374151",
+                borderRadius: "12px",
+                border: "none",
+              }}
+              className="flex min-h-10 items-center justify-center gap-1 px-2 text-xs font-semibold"
             >
               <Navigation size={13} /> {t(key)}
             </button>

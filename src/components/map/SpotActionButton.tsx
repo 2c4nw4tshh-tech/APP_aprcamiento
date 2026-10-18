@@ -159,7 +159,8 @@ export function SpotActionButton({ spotId, latitude, longitude, onCompleted, onR
       type="button"
       onClick={() => void startRoute()}
       disabled={starting}
-      className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] px-4 py-3 text-sm font-semibold text-white shadow-md ring-2 ring-[#93C5FD] ring-offset-1 disabled:opacity-60"
+      style={{ backgroundColor: "#3B82F6", color: "#FFFFFF", borderRadius: "16px", boxShadow: "0px 4px 16px rgba(59, 130, 246, 0.35)" }}
+      className="mt-2 inline-flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold"
     >
       {starting ? <LoaderCircle size={16} className="animate-spin" /> : <><LocateFixed size={16} /><Navigation size={14} /></>}
       {starting ? t("startingRoute") : t("startRouteAndReserve")}

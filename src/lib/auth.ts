@@ -12,17 +12,18 @@ export const authOptions: AuthOptions = {
         email: { label: "Email", type: "email" },
       },
       async authorize(credentials) {
-        if (!credentials?.email) return null;
+        const email = credentials?.email?.trim().toLowerCase();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
 
         let user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         });
 
         if (!user) {
           user = await prisma.user.create({
             data: {
-              email: credentials.email,
-              name: credentials.email.split("@")[0],
+              email,
+              name: email.split("@")[0],
               points: 100,
             },
           });
@@ -96,7 +97,7 @@ export const authOptions: AuthOptions = {
   },
 
   pages: {
-    signIn: "/auth/signin",
+    signIn: "/login",
   },
 
   secret: process.env.NEXTAUTH_SECRET,

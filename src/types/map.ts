@@ -14,18 +14,18 @@ export const MAP_STYLES: Record<MapStyleId, MapStyleConfig> = {
     style: {
       version: 8,
       sources: {
-        "carto-voyager": {
+        "openstreetmap": {
           type: "raster",
-          tiles: ["https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"],
+          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
           tileSize: 256,
-          attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+          attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap contributors</a>",
         },
       },
       layers: [
         {
-          id: "carto-voyager-base",
+          id: "openstreetmap-base",
           type: "raster",
-          source: "carto-voyager",
+          source: "openstreetmap",
           minzoom: 0,
           maxzoom: 20,
         },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTheme } from "next-themes";
 import { LoaderCircle, LocateFixed, Navigation, X } from "lucide-react";
 import { getNavigationUrl, NavigationProvider } from "@/lib/gis";
 import { useAppStore } from "@/store";
@@ -28,6 +29,7 @@ export function NavigationChooser({
   className,
 }: NavigationChooserProps) {
   const t = useAppStore((state) => state.t);
+  const { resolvedTheme } = useTheme();
   const setUserLocation = useAppStore((state) => state.setUserLocation);
   const [open, setOpen] = useState(false);
   const [origin, setOrigin] = useState<Coordinates | null>(null);
@@ -69,7 +71,17 @@ export function NavigationChooser({
 
   return (
     <>
-      <button type="button" onClick={() => { setOpen(true); acquireOrigin(); }} className={className}>
+      <button
+        type="button"
+        onClick={() => { setOpen(true); acquireOrigin(); }}
+        style={{
+          backgroundColor: resolvedTheme === "dark" ? "#1F2937" : "#F3F4F6",
+          color: resolvedTheme === "dark" ? "#F3F4F6" : "#374151",
+          borderRadius: "12px",
+          border: "none",
+        }}
+        className={className}
+      >
         <Navigation size={14} />
         {buttonLabel ?? t("navigateTo")}
       </button>
@@ -108,9 +120,15 @@ export function NavigationChooser({
                   type="button"
                   onClick={() => navigate(id)}
                   disabled={!origin || locating}
-                  className="flex min-h-12 items-center gap-3 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  style={{
+                    backgroundColor: resolvedTheme === "dark" ? "#1F2937" : "#F3F4F6",
+                    color: resolvedTheme === "dark" ? "#F3F4F6" : "#374151",
+                    borderRadius: "12px",
+                    border: "none",
+                  }}
+                  className="flex min-h-12 items-center gap-3 px-3 py-2 text-left text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <Navigation size={17} className="text-gray-500 dark:text-gray-400" />
+                  <Navigation size={17} aria-hidden="true" />
                   {t(translationKey)}
                 </button>
               ))}

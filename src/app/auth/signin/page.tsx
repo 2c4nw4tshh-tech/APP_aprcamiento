@@ -3,6 +3,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/store";
+import { GlobalLoader } from "@/components/ui/GlobalLoader";
 
 export default function SignInPage() {
   const t = useAppStore((state) => state.t);
@@ -18,11 +19,7 @@ export default function SignInPage() {
   }, [status, router]);
 
   if (status === "loading") {
-    return (
-      <div className="fixed inset-0 bg-bg flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-      </div>
-    );
+    return <GlobalLoader />;
   }
 
   const handleSignIn = async () => {
@@ -89,14 +86,6 @@ export default function SignInPage() {
               : t("signInButton")
             }
           </button>
-        </div>
-
-        {/* Nota de demo */}
-        <div className="mt-6 bg-surface border border-base rounded-2xl px-4 py-3">
-          <p className="text-xs text-muted text-center leading-relaxed">
-            {t("demoMode")}<br/>
-            <span className="text-accent font-semibold">{t("demoAddress")}</span>
-          </p>
         </div>
 
         <p className="text-center text-xs text-muted mt-6">

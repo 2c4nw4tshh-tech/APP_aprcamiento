@@ -9,6 +9,7 @@ import { BottomNav } from "@/components/ui/BottomNav";
 import { AuthGuard } from "@/components/ui/AuthGuard";
 import { SpotDetailModal } from "@/components/modals/SpotDetailModal";
 import { Button } from "@/components/ui/Button";
+import { GlobalLoader } from "@/components/ui/GlobalLoader";
 import { NudgeBanner } from "@/components/ui/NudgeBanner";
 import { RefreshCw } from "lucide-react";
 import { fetchNearbySpots } from "@/lib/spots-api";
@@ -18,12 +19,7 @@ const SpotMap = dynamic(
   () => import("@/components/map/SpotMap"),
   {
     ssr: false,
-    loading: () => (
-      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-bg text-center">
-        <div className="w-10 h-10 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-        <p className="text-sm text-muted">{useAppStore.getState().t("mapPreparing")}</p>
-      </div>
-    ),
+    loading: () => <GlobalLoader label={useAppStore.getState().t("mapPreparing")} />,
   }
 );
 
@@ -133,10 +129,7 @@ function DashboardContent() {
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-bg px-6 text-center">
               {locationLoading || !locationRequested ? (
-                <>
-                  <div className="w-10 h-10 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-                  <p className="text-sm text-muted">{t("locationSearching")}</p>
-                </>
+                <GlobalLoader fullScreen={false} label={t("locationSearching")} />
               ) : (
                 <>
                   <p className="max-w-sm text-sm leading-relaxed text-muted">
