@@ -31,9 +31,9 @@ export function SpotDetailModal({ spot, onClose, onOccupied, onNavigateInApp, on
   const isOld = spot.minutesAgo > 30;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[1500] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="w-full max-w-md bg-surface rounded-3xl border border-base p-5 pb-safe shadow-2xl"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-base bg-surface p-5 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

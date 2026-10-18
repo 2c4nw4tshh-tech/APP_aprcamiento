@@ -15,7 +15,7 @@ export function ArrivalModal({ open, driverStars, ownerStars, onClose }: Arrival
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 px-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[1600] flex items-center justify-center bg-black/55 px-4" onClick={onClose}>
       <section
         role="dialog"
         aria-modal="true"

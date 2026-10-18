@@ -2,6 +2,7 @@
 import { Component, useEffect, useState } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useAppStore } from "@/store";
 import { NearbySpot } from "@/types";
@@ -61,6 +62,7 @@ class DashboardErrorBoundary extends Component<{ children: ReactNode }, Dashboar
 }
 
 function DashboardContent() {
+  const router = useRouter();
   const { coords, loading: locationLoading, request: getLocation, requestIfGranted, error: geoError } = useGeolocation();
   const { nearbySpots, setNearbySpots, userLocation, t } = useAppStore();
   const [selected, setSelected] = useState<NearbySpot | null>(null);
@@ -98,13 +100,9 @@ function DashboardContent() {
     if (!userLocation) return;
     setRadarActive(true);
     try {
-      const spots = await fetchNearbySpots(`/api/spots/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=300`);
-      const count = spots.length;
-      if (count > 0) {
-        window.alert(t("radarFound", { n: count }));
-      } else {
-        window.alert(t("radarEmpty"));
-      }
+      const spots = await fetchNearbySpots(`/api/spots/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=500`);
+      setNearbySpots(spots);
+      router.push("/find");
     } finally {
       setTimeout(() => setRadarActive(false), 1800);
     }

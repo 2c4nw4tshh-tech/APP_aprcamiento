@@ -86,7 +86,7 @@ export function NavigationChooser({
         {buttonLabel ?? t("navigateTo")}
       </button>
       {open && (
-        <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-4 sm:items-center" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-[1700] flex items-end justify-center bg-black/50 p-4 sm:items-center" onClick={() => setOpen(false)}>
           <section
             role="dialog"
             aria-modal="true"
