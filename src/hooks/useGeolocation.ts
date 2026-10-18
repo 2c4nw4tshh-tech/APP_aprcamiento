@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import toast from "react-hot-toast";
 import { Coordinates, Language } from "@/types";
 import { useAppStore } from "@/store";
 
@@ -39,6 +40,12 @@ export function useGeolocation(watch = false) {
   const [state, setState] = useState<GeoState>({ coords: null, error: null, loading: false });
   const language = useAppStore((store) => store.language);
   const setUserLocation = useAppStore((s) => s.setUserLocation);
+  const slowTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const clearSlowNotice = useCallback(() => {
+    clearTimeout(slowTimer.current);
+    toast.dismiss("geo-slow");
+  }, []);
 
   useEffect(() => {
     if (state.errorKind) setState((previous) => ({ ...previous, error: getGeoErrorMessage(state.errorKind!, language) }));
@@ -46,16 +53,23 @@ export function useGeolocation(watch = false) {
 
   const onSuccess = useCallback((pos: GeolocationPosition) => {
     const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    clearSlowNotice();
+    console.log("[geo] success", c);
     setState({ coords: c, error: null, loading: false });
     setUserLocation(c);
-  }, [setUserLocation]);
+  }, [setUserLocation, clearSlowNotice]);
 
   const onError = useCallback((err: GeolocationPositionError) => {
     const errorKind = getGeoErrorKind(err, typeof window !== "undefined" ? window.location.hostname : "");
-    setState((previous) => ({ ...previous, errorKind, error: getGeoErrorMessage(errorKind, language), loading: false }));
-  }, [language]);
+    const message = getGeoErrorMessage(errorKind, language);
+    clearSlowNotice();
+    console.log("[geo] error", err.code, err.message);
+    toast.error(message, { id: "geo-error" });
+    setState((previous) => ({ ...previous, errorKind, error: message, loading: false }));
+  }, [language, clearSlowNotice]);
 
   const request = useCallback(() => {
+    console.log("[geo] click");
     if (typeof window !== "undefined" && window.location.protocol === "http:" && isLocalNetworkHost(window.location.hostname) && !isSecureGeolocationContext()) {
       const errorKind = getGeoErrorKind(null, window.location.hostname);
       setState({ coords: null, errorKind, error: getGeoErrorMessage(errorKind, language), loading: false });
@@ -69,6 +83,8 @@ export function useGeolocation(watch = false) {
 
     setState((previous) => ({ ...previous, error: null, errorKind: undefined, loading: true }));
     // Debe llamarse sincrónicamente desde el gesto del usuario para que Safari muestre el aviso.
+    clearSlowNotice();
+    slowTimer.current = setTimeout(() => toast.loading(useAppStore.getState().t("locationSearching"), { id: "geo-slow" }), 4000);
     navigator.geolocation.getCurrentPosition(
       onSuccess,
       (err) => {
@@ -77,7 +93,7 @@ export function useGeolocation(watch = false) {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
-  }, [onSuccess, onError, language]);
+  }, [onSuccess, onError, language, clearSlowNotice]);
 
   // Safari no muestra el aviso sin gesto del usuario: solo se autopide si ya hay permiso.
   const requestIfGranted = useCallback(async () => {
