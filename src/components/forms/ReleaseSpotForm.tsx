@@ -83,7 +83,9 @@ export function ReleaseSpotForm() {
       const releasedSpot = result.data.data;
       if (!result.ok || !releasedSpot) {
         console.error("[release] respuesta de la API", result);
-        throw new Error(result.data.error ?? result.error ?? "No se pudo publicar la plaza.");
+        const details = (result.data as { details?: unknown }).details;
+        const reason = result.data.error ?? result.error ?? "No se pudo publicar la plaza.";
+        throw new Error(details ? `${reason} [${JSON.stringify(details)}]` : reason);
       }
       const json = result.data;
       setCurrentSpot(releasedSpot);
@@ -94,7 +96,7 @@ export function ReleaseSpotForm() {
       toast.success(t("spotReleased", { n: json.pointsEarned ?? 10 }));
       router.push("/release/broadcasting");
     } catch (err) {
-      console.error(err);
+      console.error("Error al liberar:", err);
       toast.error((err as Error).message);
     } finally {
       setSubmitting(false);

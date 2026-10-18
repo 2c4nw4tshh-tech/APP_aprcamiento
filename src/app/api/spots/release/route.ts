@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       : { type: error instanceof Error ? error.name : "UnknownError", message: error instanceof Error ? error.message : String(error) };
     console.error("API Error: fallo al publicar plaza", diagnostic, error, "[POST /api/spots/release]");
     return NextResponse.json(
-      { success: false, data: null, error: "No se pudo guardar el aparcamiento. Revisa los datos e inténtalo de nuevo." },
+      { success: false, data: null, error: "No se pudo guardar el aparcamiento. Revisa los datos e inténtalo de nuevo.", ...(process.env.DEBUG_API_ERRORS === "true" ? { details: diagnostic } : {}) },
       { status: 400 },
     );
   }
