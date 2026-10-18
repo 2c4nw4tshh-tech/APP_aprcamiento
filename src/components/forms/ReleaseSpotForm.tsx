@@ -26,6 +26,8 @@ export function ReleaseSpotForm() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [releaseDelay, setReleaseDelay] = useState<number>(0);
+  const [hasMoreSpots, setHasMoreSpots] = useState(false);
+  const [moreSpotsCount, setMoreSpotsCount] = useState(1);
 
   const vehicleOptions: { value: VehicleSize; label: string }[] = [
     { value: "MOTO", label: t("motorcycle") },
@@ -59,7 +61,7 @@ export function ReleaseSpotForm() {
       const result = await safeFetchJson<{ data?: Spot; pointsEarned?: number; user?: User; error?: string }>("/api/spots/release", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, latitude: coords.lat, longitude: coords.lng, releaseDelayMinutes: releaseDelay }),
+        body: JSON.stringify({ ...form, latitude: coords.lat, longitude: coords.lng, releaseDelayMinutes: form.isLeaving ? releaseDelay : 0, moreSpotsNearby: hasMoreSpots ? moreSpotsCount : 0 }),
       }, {});
       const releasedSpot = result.data.data;
       if (!result.ok || !releasedSpot) throw new Error(result.data.error ?? result.error ?? "No se pudo publicar la plaza.");
@@ -185,7 +187,41 @@ export function ReleaseSpotForm() {
         </div>
       </section>
 
-      {/* Release delay */}
+      {/* More spots nearby */}
+      <section>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={hasMoreSpots}
+          onClick={() => setHasMoreSpots((v) => !v)}
+          style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "16px" }}
+          className="flex w-full items-center justify-between px-4 py-3 text-left"
+        >
+          <span className="text-sm font-semibold">{t("moreSpotsToggle")}</span>
+          <span
+            style={{ backgroundColor: hasMoreSpots ? "#10B981" : "var(--border)" }}
+            className="relative h-6 w-11 rounded-full transition-colors"
+          >
+            <span
+              style={{ transform: hasMoreSpots ? "translateX(20px)" : "translateX(0)" }}
+              className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-transform"
+            />
+          </span>
+        </button>
+        {hasMoreSpots && (
+          <div className="mt-2 flex items-center justify-between rounded-2xl border border-base bg-surface2 px-4 py-2">
+            <span className="text-sm">{t("moreSpotsCount")}</span>
+            <div className="flex items-center gap-3">
+              <button type="button" aria-label="-" onClick={() => setMoreSpotsCount((n) => Math.max(1, n - 1))} className="h-8 w-8 rounded-full border border-base text-lg font-bold">−</button>
+              <span className="w-6 text-center text-sm font-bold">{moreSpotsCount}</span>
+              <button type="button" aria-label="+" onClick={() => setMoreSpotsCount((n) => Math.min(99, n + 1))} className="h-8 w-8 rounded-full border border-base text-lg font-bold">+</button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Release delay: solo si el usuario indica que se va pronto */}
+      {form.isLeaving && (
       <section>
         <label className="section-label"><TimerReset size={12} /> {t("releaseTime")}</label>
         <div className="grid gap-2">
@@ -200,6 +236,7 @@ export function ReleaseSpotForm() {
           ))}
         </div>
       </section>
+      )}
 
       <button
         type="button"

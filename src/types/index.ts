@@ -37,6 +37,7 @@ export interface Spot {
   parkingType: ParkingType;
   zoneType: ZoneType;
   isLeaving: boolean;
+  moreSpotsNearby?: number;
   availableAt: string;
   expiresAt: string;
   createdAt: string;
@@ -111,6 +112,7 @@ export interface ReleaseSpotPayload {
   parkingType: ParkingType;
   zoneType: ZoneType;
   isLeaving: boolean;
+  moreSpotsNearby?: number;
   availableAt?: string;
   releaseDelayMinutes?: number;
 }
@@ -224,6 +226,9 @@ export const TRANSLATIONS = {
     releaseTime: "Tiempo de liberación",
     availableNow: "Ya disponible",
     releasingIn: "Dejo mi plaza en {n} min",
+    moreSpotsToggle: "Hay más aparcamientos cerca",
+    moreSpotsCount: "Cantidad de aparcamientos adicionales",
+    moreSpotsInfo: "Hay {n} aparcamientos más cerca",
     occupySpot: "Ocupar este aparcamiento",
     shareCommunity: "Compartir hace comunidad",
     shareCommunityMessage: "Si cierras esta plaza sin reservar, compartirla ayuda a otros usuarios y reduce la presión sobre la ciudad.",
@@ -402,6 +407,9 @@ export const TRANSLATIONS = {
     releaseTime: "Release time",
     availableNow: "Available now",
     releasingIn: "Leaving in {n} min",
+    moreSpotsToggle: "There are more parking spots nearby",
+    moreSpotsCount: "Number of additional spots",
+    moreSpotsInfo: "There are {n} more spots nearby",
     occupySpot: "Occupy this parking spot",
     shareCommunity: "Sharing builds community",
     shareCommunityMessage: "If you close this spot without reserving it, sharing helps other users and reduces pressure on the city.",

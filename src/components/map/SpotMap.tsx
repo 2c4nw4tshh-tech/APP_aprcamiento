@@ -19,6 +19,7 @@ interface SpotMapProps {
   center?: [number, number];
   spots?: NearbySpot[] | null;
   onSpotClick?: (spot: NearbySpot) => void;
+  selectedSpotId?: string | null;
   pickMode?: boolean;
   onMapPick?: (latitude: number, longitude: number) => void;
   locationWarning?: string;
@@ -42,6 +43,7 @@ export default function SpotMap({
   center = DEFAULT_CENTER,
   spots,
   onSpotClick,
+  selectedSpotId,
   pickMode = false,
   onMapPick,
   locationWarning,
@@ -147,25 +149,33 @@ export default function SpotMap({
           </div>
         </Marker>
 
-        {safeSpots.map((spot) => (
-          <Marker
-            key={spot.id}
-            latitude={spot.latitude}
-            longitude={spot.longitude}
-            onClick={() => onSpotClick?.(spot)}
-          >
-            <div className="relative flex flex-col items-center cursor-pointer hover:scale-110 transition-transform">
-              <div className="flex items-center justify-center rounded-full border-2 bg-white p-2 text-2xl shadow-xl" style={{ borderColor: NAVIGATION_BLUE }}>
-                {spot.leaver?.customMarker ?? "📍"}
+        {safeSpots.map((spot) => {
+          const selected = spot.id === selectedSpotId
+            || (navigationDestination?.lat === spot.latitude && navigationDestination?.lng === spot.longitude);
+          const leavingSoon = spot.isLeaving || (spot.countdownMinutes ?? 0) > 0;
+          return (
+            <Marker
+              key={spot.id}
+              latitude={spot.latitude}
+              longitude={spot.longitude}
+              anchor={selected ? "bottom" : "center"}
+              onClick={(event) => { event.originalEvent.stopPropagation(); onSpotClick?.(spot); }}
+            >
+              <div className="relative flex cursor-pointer flex-col items-center transition-transform hover:scale-110">
+                {selected ? (
+                  <MapPin size={36} className="drop-shadow-lg" style={{ color: leavingSoon ? "#FACC15" : "#22C55E", fill: "currentColor", stroke: "#FFFFFF" }} />
+                ) : (
+                  <div className="h-5 w-5 rounded-full border-2 border-white shadow-lg" style={{ backgroundColor: leavingSoon ? "#FACC15" : "#22C55E" }} />
+                )}
+                {(spot.countdownMinutes ?? 0) > 0 && (
+                  <span className="mt-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                    {spot.countdownMinutes ?? 0} min
+                  </span>
+                )}
               </div>
-              {(spot.countdownMinutes ?? 0) > 0 && (
-                <span className="mt-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
-                  {spot.countdownMinutes ?? 0} min
-                </span>
-              )}
-            </div>
-          </Marker>
-        ))}
+            </Marker>
+          );
+        })}
       </Map>
       {mapReady && <MapStylePicker value={styleId} onChange={selectStyle} />}
       {navigationOrigin && navigationDestination && (

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     const body: ReleaseSpotPayload | null = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ success: false, error: "El cuerpo de la solicitud no es JSON válido." }, { status: 400 });
 
-    const { latitude, longitude, locationDesc, notes, vehicleSize, spotSize, parkingType, zoneType, isLeaving, releaseDelayMinutes } = body;
+    const { latitude, longitude, locationDesc, notes, vehicleSize, spotSize, parkingType, zoneType, isLeaving, releaseDelayMinutes, moreSpotsNearby } = body;
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
       return NextResponse.json({ success: false, error: "La ubicación debe incluir latitud y longitud válidas." }, { status: 400 });
     }
@@ -26,6 +26,11 @@ export async function POST(req: NextRequest) {
     const delayMinutes = Number(releaseDelayMinutes ?? 0);
     if (!Number.isFinite(delayMinutes) || delayMinutes < 0 || delayMinutes > 120) {
       return NextResponse.json({ success: false, error: "El tiempo de liberación no es válido." }, { status: 400 });
+    }
+
+    const moreSpots = Math.trunc(Number(moreSpotsNearby ?? 0));
+    if (!Number.isFinite(moreSpots) || moreSpots < 0 || moreSpots > 99) {
+      return NextResponse.json({ success: false, error: "La cantidad de aparcamientos cercanos no es válida." }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
@@ -63,6 +68,7 @@ export async function POST(req: NextRequest) {
           parkingType: parkingType ?? "PARALLEL",
           zoneType: zoneType ?? "FREE",
           isLeaving: isLeaving ?? false,
+          moreSpotsNearby: moreSpots,
           availableAt,
           expiresAt: spotExpiresAt(2),
         },

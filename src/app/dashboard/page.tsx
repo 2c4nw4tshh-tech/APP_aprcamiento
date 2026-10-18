@@ -118,6 +118,7 @@ function DashboardContent() {
               center={[coords.lat, coords.lng]}
               spots={nearbySpots}
               onSpotClick={setSelected}
+              selectedSpotId={selected?.id}
               locationWarning={geoError ?? undefined}
               navigationOrigin={navigationOrigin ?? coords}
               navigationDestination={navigationDestination}
