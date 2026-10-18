@@ -61,7 +61,7 @@ class DashboardErrorBoundary extends Component<{ children: ReactNode }, Dashboar
 }
 
 function DashboardContent() {
-  const { coords, loading: locationLoading, request: getLocation, error: geoError } = useGeolocation();
+  const { coords, loading: locationLoading, request: getLocation, requestIfGranted, error: geoError } = useGeolocation();
   const { nearbySpots, setNearbySpots, userLocation, t } = useAppStore();
   const [selected, setSelected] = useState<NearbySpot | null>(null);
   const [loading, setLoading]   = useState(false);
@@ -72,7 +72,7 @@ function DashboardContent() {
   const [navigationOrigin, setNavigationOrigin] = useState<LatLng | null>(null);
 
   useEffect(() => {
-    getLocation();
+    requestIfGranted();
     setLocationRequested(true);
   }, []); // eslint-disable-line
 
@@ -135,7 +135,7 @@ function DashboardContent() {
                   <p className="max-w-sm text-sm leading-relaxed text-muted">
                     {geoError ?? t("dashboardEnableLocation")}
                   </p>
-                  <Button onClick={getLocation} size="sm">{t("allowLocation")}</Button>
+                  <Button onClick={() => getLocation()} size="sm">{t("allowLocation")}</Button>
                 </>
               )}
             </div>

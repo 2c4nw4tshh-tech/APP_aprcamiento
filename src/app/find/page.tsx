@@ -32,7 +32,7 @@ interface Destination extends Coordinates {
 }
 
 export default function FindPage() {
-  const { coords, request: getLocation, error: geoError } = useGeolocation();
+  const { coords, request: getLocation, requestIfGranted, error: geoError } = useGeolocation();
   const { nearbySpots, setNearbySpots, userLocation, language, t } = useAppStore();
   const [selected, setSelected] = useState<NearbySpot | null>(null);
   const [radius, setRadius] = useState(500);
@@ -93,7 +93,7 @@ export default function FindPage() {
     setSelected(selected.includes(value) ? selected.filter((item) => item !== value) : [...selected, value]);
   };
 
-  useEffect(() => { getLocation(); }, []); // eslint-disable-line
+  useEffect(() => { requestIfGranted(); }, []); // eslint-disable-line
 
   useEffect(() => {
     const reference = destination ?? userLocation ?? coords;
@@ -238,7 +238,7 @@ export default function FindPage() {
             <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
               <div className="text-5xl mb-4">📍</div>
               <p className="font-display font-semibold">{geoError ?? t("dashboardEnableLocation")}</p>
-              <Button onClick={getLocation} size="sm" className="mt-4">{t("allowLocation")}</Button>
+              <Button onClick={() => getLocation()} size="sm" className="mt-4">{t("allowLocation")}</Button>
             </div>
           ) : loading ? (
             [1, 2, 3].map((i) => <div key={i} className="h-28 bg-surface rounded-3xl animate-pulse" />)

@@ -68,8 +68,26 @@ export function useGeolocation(watch = false) {
     }
 
     setState((previous) => ({ ...previous, error: null, errorKind: undefined, loading: true }));
-    navigator.geolocation.getCurrentPosition(onSuccess, onError, { enableHighAccuracy: true, timeout: 10000 });
+    // Debe llamarse sincrónicamente desde el gesto del usuario para que Safari muestre el aviso.
+    navigator.geolocation.getCurrentPosition(
+      onSuccess,
+      (err) => {
+        if (err.code === 1) { onError(err); return; }
+        navigator.geolocation.getCurrentPosition(onSuccess, onError, { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
   }, [onSuccess, onError, language]);
+
+  // Safari no muestra el aviso sin gesto del usuario: solo se autopide si ya hay permiso.
+  const requestIfGranted = useCallback(async () => {
+    try {
+      const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
+      if (status?.state === "granted") request();
+    } catch {
+      // Permissions API no disponible; se espera al botón.
+    }
+  }, [request]);
 
   useEffect(() => {
     if (!watch) return;
@@ -90,5 +108,5 @@ export function useGeolocation(watch = false) {
     return () => navigator.geolocation.clearWatch(id);
   }, [watch, onSuccess, onError, language]);
 
-  return { ...state, request };
+  return { ...state, request, requestIfGranted };
 }
