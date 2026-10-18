@@ -111,7 +111,9 @@ h1, h2, h3, h4 {
 
 /* ─── MOBILE SAFE AREA ─── */
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
-.netlify-badge, #netlify-drawer, [class*="netlify-drawer"] { display: none !important; }
+iframe#netlify-drawer, #netlify-drawer, [data-netlify-drawer], [class*="netlify-drawer"], .netlify-badge {
+  display: none !important;
+}
 .pt-safe { padding-top:    env(safe-area-inset-top, 0px);    }
 
 /* ─── HIDE SCROLLBAR ─── */

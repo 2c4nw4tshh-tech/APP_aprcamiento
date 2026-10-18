@@ -5,7 +5,7 @@ import { Coordinates, Language } from "@/types";
 import { useAppStore } from "@/store";
 
 type GeoErrorKind = "blocked" | "http" | "unavailable" | "unsupported" | "general";
-interface GeoState { coords: Coordinates | null; error: string | null; errorKind?: GeoErrorKind; loading: boolean; }
+interface GeoState { coords: Coordinates | null; error: string | null; errorKind?: GeoErrorKind; loading: boolean; hasPermission?: boolean; }
 
 const isLocalNetworkHost = (hostname: string) =>
   /^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
@@ -55,7 +55,7 @@ export function useGeolocation(watch = false) {
     const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
     clearSlowNotice();
     console.log("[geo] success", c);
-    setState({ coords: c, error: null, loading: false });
+    setState({ coords: c, error: null, loading: false, hasPermission: true });
     setUserLocation(c);
   }, [setUserLocation, clearSlowNotice]);
 
@@ -65,7 +65,7 @@ export function useGeolocation(watch = false) {
     clearSlowNotice();
     console.log("[geo] error", err.code, err.message);
     toast.error(message, { id: "geo-error" });
-    setState((previous) => ({ ...previous, errorKind, error: message, loading: false }));
+    setState((previous) => ({ ...previous, errorKind, error: message, loading: false, hasPermission: err.code === 1 ? false : previous.hasPermission }));
   }, [language, clearSlowNotice]);
 
   const request = useCallback(() => {
@@ -95,11 +95,11 @@ export function useGeolocation(watch = false) {
     );
   }, [onSuccess, onError, language, clearSlowNotice]);
 
-  // Safari no muestra el aviso sin gesto del usuario: solo se autopide si ya hay permiso.
+  // Se pide con permiso granted o prompt; si ya está denegado se espera al botón.
   const requestIfGranted = useCallback(async () => {
     try {
       const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
-      if (status?.state === "granted") request();
+      if (status?.state === "granted" || status?.state === "prompt") request();
     } catch {
       // Permissions API no disponible; se espera al botón.
     }
