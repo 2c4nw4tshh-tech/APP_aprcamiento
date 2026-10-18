@@ -55,16 +55,36 @@ export function ReleaseSpotForm() {
   ];
 
   const handleSubmit = async () => {
-    if (!coords) { toast.error(t("enableLocation")); getLocation(); return; }
+    if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) {
+      toast.error(t("enableLocation"));
+      getLocation();
+      return;
+    }
     setSubmitting(true);
     try {
+      const payload = {
+        ...form,
+        locationDesc: form.locationDesc.trim(),
+        notes: form.notes.trim(),
+        vehicleSize: form.vehicleSize || "COMPACT",
+        spotSize: form.spotSize || "MEDIUM",
+        parkingType: form.parkingType || "PARALLEL",
+        zoneType: form.zoneType || "FREE",
+        latitude: coords.lat,
+        longitude: coords.lng,
+        releaseDelayMinutes: form.isLeaving ? releaseDelay : 0,
+        moreSpotsNearby: hasMoreSpots ? moreSpotsCount : 0,
+      };
       const result = await safeFetchJson<{ data?: Spot; pointsEarned?: number; user?: User; error?: string }>("/api/spots/release", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, latitude: coords.lat, longitude: coords.lng, releaseDelayMinutes: form.isLeaving ? releaseDelay : 0, moreSpotsNearby: hasMoreSpots ? moreSpotsCount : 0 }),
+        body: JSON.stringify(payload),
       }, {});
       const releasedSpot = result.data.data;
-      if (!result.ok || !releasedSpot) throw new Error(result.data.error ?? result.error ?? "No se pudo publicar la plaza.");
+      if (!result.ok || !releasedSpot) {
+        console.error("[release] respuesta de la API", result);
+        throw new Error(result.data.error ?? result.error ?? "No se pudo publicar la plaza.");
+      }
       const json = result.data;
       setCurrentSpot(releasedSpot);
       if (json.user) setUser(json.user);
@@ -74,6 +94,7 @@ export function ReleaseSpotForm() {
       toast.success(t("spotReleased", { n: json.pointsEarned ?? 10 }));
       router.push("/release/broadcasting");
     } catch (err) {
+      console.error(err);
       toast.error((err as Error).message);
     } finally {
       setSubmitting(false);
