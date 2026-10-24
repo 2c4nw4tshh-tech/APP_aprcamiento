@@ -3,6 +3,7 @@ export interface SafeFetchResult<T> {
   status: number;
   data: T;
   error?: string;
+  body?: unknown;
 }
 
 export async function safeFetchJson<T>(
@@ -34,6 +35,7 @@ export async function safeFetchJson<T>(
         ok: false,
         status: response.status,
         data: fallback,
+        body: payload,
         error: typeof payloadError === "string" ? payloadError : `La solicitud falló (${response.status}).`,
       };
     }

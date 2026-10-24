@@ -74,24 +74,18 @@ export function NavigationChooser({
       <button
         type="button"
         onClick={() => { setOpen(true); acquireOrigin(); }}
-        style={{
-          backgroundColor: resolvedTheme === "dark" ? "#1F2937" : "#F3F4F6",
-          color: resolvedTheme === "dark" ? "#F3F4F6" : "#374151",
-          borderRadius: "12px",
-          border: "none",
-        }}
-        className={className}
+        className={`${className} rounded-xl bg-surface2 text-base`}
       >
         <Navigation size={14} />
         {buttonLabel ?? t("navigateTo")}
       </button>
       {open && (
-        <div className="fixed inset-0 z-[1700] flex items-end justify-center bg-black/50 p-4 sm:items-center" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-[1700] flex items-center justify-center bg-black/50 p-4" onClick={() => setOpen(false)}>
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby="navigation-chooser-title"
-            className="w-full max-w-sm rounded-2xl border border-base bg-surface p-4 shadow-2xl"
+            className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl border border-base bg-surface p-4 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between">
@@ -108,7 +102,7 @@ export function NavigationChooser({
               )}
               {locationError && (
                 <div className="py-3">
-                  <p className="mb-2 text-sm text-red-500">{t("navigationLocationError")}</p>
+                  <p className="mb-2 text-sm text-[var(--color-destructive)]">{t("navigationLocationError")}</p>
                   <button type="button" onClick={acquireOrigin} className="inline-flex items-center gap-2 text-sm font-semibold text-accent">
                     <LocateFixed size={15} /> {t("retryLocation")}
                   </button>
@@ -120,13 +114,7 @@ export function NavigationChooser({
                   type="button"
                   onClick={() => navigate(id)}
                   disabled={!origin || locating}
-                  style={{
-                    backgroundColor: resolvedTheme === "dark" ? "#1F2937" : "#F3F4F6",
-                    color: resolvedTheme === "dark" ? "#F3F4F6" : "#374151",
-                    borderRadius: "12px",
-                    border: "none",
-                  }}
-                  className="flex min-h-12 items-center gap-3 px-3 py-2 text-left text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex min-h-12 items-center gap-3 rounded-xl bg-surface2 px-3 py-2 text-left text-sm font-medium text-base disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Navigation size={17} aria-hidden="true" />
                   {t(translationKey)}

@@ -256,7 +256,7 @@ export default function FindPage() {
                 className="w-full text-left bg-surface border border-base rounded-3xl p-4 active:scale-[0.99] transition-transform"
               >
                 <div className="flex items-start gap-3">
-                  <span className={`mt-1 w-3 h-3 rounded-full flex-shrink-0 ${spot.isLeaving ? "bg-yellow-400" : "bg-green-500"}`} />
+                  <span className={`mt-1 h-3 w-3 flex-shrink-0 rounded-full ${spot.isLeaving ? "bg-amber-400" : "bg-[var(--color-success)]"}`} />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate">
                       {spot.locationDesc || `${spot.latitude.toFixed(4)}, ${spot.longitude.toFixed(4)}`}

@@ -73,7 +73,7 @@ export default function SignInPage() {
               className="w-full bg-surface border border-base rounded-2xl px-4 py-4 text-base focus:border-accent focus:outline-none placeholder:text-muted"
               autoFocus
             />
-            {error && <p className="text-red-500 text-xs mt-2 pl-1">{error}</p>}
+            {error && <p className="mt-2 pl-1 text-xs text-[var(--color-destructive)]">{error}</p>}
           </div>
 
           <button

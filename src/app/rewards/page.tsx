@@ -21,7 +21,7 @@ interface UserRewardsData {
 
 export default function RewardsPage() {
   const { update } = useSession();
-  const { user, setUser, setAccentColor, t } = useAppStore();
+  const { user, setUser, t } = useAppStore();
   const [items, setItems]         = useState<RewardItem[]>([]);
   const [redeemed, setRedeemed]   = useState<Set<string>>(new Set());
   const [loading, setLoading]     = useState<string | null>(null);
@@ -42,6 +42,7 @@ export default function RewardsPage() {
   }, []);
 
   const handleRedeem = async (item: RewardItem) => {
+    if (item.type === "accent_color") return;
     if ((user?.points ?? 0) < item.cost) { toast.error(t("notEnoughPoints")); return; }
     setLoading(item.id);
     try {
@@ -57,15 +58,10 @@ export default function RewardsPage() {
       if (!result.ok) throw new Error(result.error);
       const json = result.data;
 
-      if (item.type === "accent_color") {
-        setAccentColor(item.value);
-      }
-
       if (user) {
         const updatedUser = {
           ...user,
           points: json.data.points,
-          accentColor: json.data.accentColor ?? user.accentColor,
           customMarker: json.data.customMarker ?? user.customMarker,
         };
         setUser(updatedUser);
@@ -115,11 +111,10 @@ export default function RewardsPage() {
             {t("rewardsCatalog")}
           </h2>
           <div className="grid grid-cols-2 gap-3">
-            {items.map((item) => {
+            {items.filter((item) => item.type !== "accent_color").map((item) => {
               const owned = redeemed.has(item.id);
               const canAfford = (user?.points ?? 0) >= item.cost;
-              const isColor = item.type === "accent_color";
-              const isActive = isColor ? user?.accentColor === item.value : user?.customMarker === item.value;
+              const isActive = user?.customMarker === item.value;
               return (
                 <div
                   key={item.id}
@@ -128,9 +123,7 @@ export default function RewardsPage() {
                   {/* Preview swatch */}
                   <div
                     className="w-full h-14 rounded-2xl flex items-center justify-center text-3xl"
-                    style={item.type === "accent_color"
-                      ? { background: `${item.value}22`, border: `2px solid ${item.value}` }
-                      : { background: "var(--surface2)", border: "2px solid var(--border)" }}
+                    style={{ background: "var(--surface2)", border: "2px solid var(--border)" }}
                   >
                     {item.emoji}
                   </div>
@@ -150,7 +143,6 @@ export default function RewardsPage() {
                     disabled={owned || !canAfford}
                     onClick={() => handleRedeem(item)}
                     className={`text-xs ${owned ? "opacity-60" : !canAfford ? "opacity-40" : ""}`}
-                    style={!owned && canAfford && isColor ? { background: item.value } : undefined}
                   >
                     {owned ? `✓ ${t("redeemed")}` : `🪙 ${item.cost} pts`}
                   </Button>

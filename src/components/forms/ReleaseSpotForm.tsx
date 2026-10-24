@@ -85,9 +85,8 @@ export function ReleaseSpotForm() {
       console.log("[release] respuesta", result.ok, result.data);
       if (!result.ok || !releasedSpot) {
         console.error("[release] respuesta de la API", result);
-        const details = (result.data as { details?: unknown }).details;
         const reason = result.data.error ?? result.error ?? "No se pudo publicar la plaza.";
-        throw new Error(details ? `${reason} [${JSON.stringify(details)}]` : reason);
+        throw new Error(`${reason} (HTTP ${result.status ?? "?"}) ${JSON.stringify(result.body ?? result.data)}`);
       }
       const json = result.data;
       setCurrentSpot(releasedSpot);
@@ -98,10 +97,10 @@ export function ReleaseSpotForm() {
       toast.success(t("spotReleased", { n: json.pointsEarned ?? 10 }));
       router.push("/release/broadcasting");
     } catch (err) {
-      console.error("ERROR COMPLETO AL LIBERAR:", JSON.stringify(err, Object.getOwnPropertyNames(err ?? {}), 2));
+      console.error("DETALLE_ERROR_LIBERAR:", err);
       const message = err instanceof Error ? err.message : JSON.stringify(err);
       toast.error(message);
-      window.alert(`Error detallado: ${message}`); // temporal: depuración
+      window.alert("FALLO REAL: " + message); // temporal: depuración
     } finally {
       setSubmitting(false);
     }
@@ -120,7 +119,7 @@ export function ReleaseSpotForm() {
           style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", borderRadius: "16px" }}
           className="flex w-full items-center gap-3 px-4 py-3 text-left"
         >
-          <MapPin size={16} style={{ color: coords ? "#10B981" : "var(--muted)" }} />
+          <MapPin size={16} style={{ color: coords ? "var(--color-success)" : "var(--muted)" }} />
           <span className="text-sm">
             {locLoading ? "…" : coords ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` : t("allowLocation")}
           </span>
@@ -156,7 +155,7 @@ export function ReleaseSpotForm() {
                 style={form.isLeaving === val
                   ? val
                     ? { backgroundColor: "#FEF3C7", border: "1px solid #F59E0B", color: "#92400E", borderRadius: "16px" }
-                    : { backgroundColor: "#DCFCE7", border: "1px solid #10B981", color: "#166534", borderRadius: "16px" }
+                    : { backgroundColor: "color-mix(in srgb, var(--color-success) 12%, var(--color-bg-secondary))", border: "1px solid var(--color-success)", color: "var(--color-label)", borderRadius: "16px" }
                   : { backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: "16px" }}
                 className="flex-1 py-3 text-sm font-semibold transition-colors"
             >
@@ -173,7 +172,7 @@ export function ReleaseSpotForm() {
           {vehicleOptions.map(({ value, label }) => (
             <button key={value} onClick={() => toggle("vehicleSize", value)}
               style={form.vehicleSize === value
-                  ? { backgroundColor: "#DBEAFE", border: "1px solid #3B82F6", color: "#1D4ED8", borderRadius: "12px" }
+                  ? { backgroundColor: "color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-secondary))", border: "1px solid var(--color-primary)", color: "var(--color-primary)", borderRadius: "12px" }
                   : { backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: "12px" }}
                 className="py-3 text-sm font-semibold transition-colors">
               {label}
@@ -189,7 +188,7 @@ export function ReleaseSpotForm() {
           {zoneOptions.map(({ value, label }) => (
             <button key={value} onClick={() => toggle("zoneType", value)}
               style={form.zoneType === value
-                  ? { backgroundColor: "#DBEAFE", border: "1px solid #3B82F6", color: "#1D4ED8", borderRadius: "12px" }
+                  ? { backgroundColor: "color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-secondary))", border: "1px solid var(--color-primary)", color: "var(--color-primary)", borderRadius: "12px" }
                   : { backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: "12px" }}
                 className="py-2.5 text-sm font-semibold transition-colors">
               {label}
@@ -205,7 +204,7 @@ export function ReleaseSpotForm() {
           {spotSizeOptions.map(({ value, label }) => (
             <button key={value} onClick={() => toggle("spotSize", value)}
               style={form.spotSize === value
-                  ? { backgroundColor: "#DBEAFE", border: "1px solid #3B82F6", color: "#1D4ED8", borderRadius: "12px" }
+                  ? { backgroundColor: "color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-secondary))", border: "1px solid var(--color-primary)", color: "var(--color-primary)", borderRadius: "12px" }
                   : { backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: "12px" }}
                 className="py-2.5 text-sm font-semibold transition-colors">
               {label}
@@ -226,7 +225,7 @@ export function ReleaseSpotForm() {
         >
           <span className="text-sm font-semibold">{t("moreSpotsToggle")}</span>
           <span
-            style={{ backgroundColor: hasMoreSpots ? "#10B981" : "var(--border)" }}
+            style={{ backgroundColor: hasMoreSpots ? "var(--color-success)" : "var(--border)" }}
             className="relative h-6 w-11 rounded-full transition-colors"
           >
             <span
@@ -255,7 +254,7 @@ export function ReleaseSpotForm() {
           {timeOptions.map(({ value, label }) => (
             <button key={value} onClick={() => setReleaseDelay(value)}
               style={releaseDelay === value
-                  ? { backgroundColor: "#DBEAFE", border: "1px solid #3B82F6", color: "#1D4ED8", borderRadius: "16px" }
+                  ? { backgroundColor: "color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-secondary))", border: "1px solid var(--color-primary)", color: "var(--color-primary)", borderRadius: "16px" }
                   : { backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: "16px" }}
                 className="py-3 text-sm font-semibold transition-colors">
               {label}
@@ -269,7 +268,7 @@ export function ReleaseSpotForm() {
         type="button"
         onClick={handleSubmit}
         disabled={submitting}
-        style={{ backgroundColor: "#10B981", color: "#FFFFFF", borderRadius: "16px", boxShadow: "0px 4px 16px rgba(16, 185, 129, 0.35)" }}
+        style={{ backgroundColor: "var(--color-success)", color: "#FFFFFF", borderRadius: "16px", boxShadow: "0px 4px 16px color-mix(in srgb, var(--color-success) 35%, transparent)" }}
         className="inline-flex min-h-14 w-full items-center justify-center gap-2 px-6 py-4 text-base font-bold disabled:cursor-not-allowed disabled:opacity-60"
       >
         {submitting ? <LoaderCircle size={18} className="animate-spin" /> : "⚡"}

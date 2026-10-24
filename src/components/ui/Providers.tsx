@@ -57,16 +57,10 @@ function CurrentUserSync() {
 }
 
 function AccentInjector() {
-  const accentColor = useAppStore((s) => s.accentColor);
   useEffect(() => {
-    document.documentElement.style.setProperty("--accent", accentColor);
-    // Decide foreground: dark text on light colours, light text on dark
-    const r = parseInt(accentColor.slice(1, 3), 16);
-    const g = parseInt(accentColor.slice(3, 5), 16);
-    const b = parseInt(accentColor.slice(5, 7), 16);
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    document.documentElement.style.setProperty("--accent-fg", luminance > 0.5 ? "#111318" : "#FFFFFF");
-  }, [accentColor]);
+    document.documentElement.style.setProperty("--accent", "var(--color-primary)");
+    document.documentElement.style.setProperty("--accent-fg", "#FFFFFF");
+  }, []);
   return null;
 }
 

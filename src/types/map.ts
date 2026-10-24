@@ -47,5 +47,5 @@ export const MAP_STYLES: Record<MapStyleId, MapStyleConfig> = {
 };
 
 export const DEFAULT_MAP_STYLE: MapStyleId = "streets";
-export const NAVIGATION_BLUE = "#3B82F6";
-export const ROUTE_LINE_BLUE = "#3B82F6";
+export const NAVIGATION_BLUE = "#007AFF";
+export const ROUTE_LINE_BLUE = "#007AFF";

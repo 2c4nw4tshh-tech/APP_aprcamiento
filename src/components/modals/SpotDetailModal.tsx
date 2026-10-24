@@ -42,7 +42,7 @@ export function SpotDetailModal({ spot, onClose, onOccupied, onNavigateInApp, on
             <div className="flex items-center gap-2">
               <span
                 className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: spot.isLeaving ? "#FACC15" : "#10B981" }}
+                style={{ backgroundColor: spot.isLeaving ? "#FACC15" : "var(--color-success)" }}
               />
               <span className="text-sm font-semibold">{spot.isLeaving ? t("iAmLeaving") : t("available")}</span>
             </div>
@@ -77,9 +77,9 @@ export function SpotDetailModal({ spot, onClose, onOccupied, onNavigateInApp, on
         </div>
 
         {(spot.moreSpotsNearby ?? 0) > 0 && (
-          <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-2xl px-4 py-2.5 mb-4">
-            <MapPin size={14} className="text-green-600 dark:text-green-400 flex-shrink-0" />
-            <p className="text-xs font-semibold text-green-700 dark:text-green-300">{t("moreSpotsInfo", { n: spot.moreSpotsNearby ?? 0 })}</p>
+          <div className="mb-4 flex items-center gap-2 rounded-2xl border border-[color-mix(in_srgb,var(--color-success)_40%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_10%,var(--color-bg))] px-4 py-2.5">
+            <MapPin size={14} className="shrink-0 text-[var(--color-success)]" />
+            <p className="text-xs font-semibold text-base">{t("moreSpotsInfo", { n: spot.moreSpotsNearby ?? 0 })}</p>
           </div>
         )}
 
@@ -130,7 +130,7 @@ export function SpotDetailModal({ spot, onClose, onOccupied, onNavigateInApp, on
           <button
             type="button"
             onClick={onNavigateInApp}
-            style={{ backgroundColor: "#3B82F6", color: "#FFFFFF", borderRadius: "16px", boxShadow: "0px 4px 16px rgba(59, 130, 246, 0.35)" }}
+            style={{ backgroundColor: "var(--color-primary)", color: "#FFFFFF", borderRadius: "16px", boxShadow: "0px 4px 16px color-mix(in srgb, var(--color-primary) 35%, transparent)" }}
             className="mt-2 inline-flex w-full items-center justify-center gap-2 px-4 py-2 text-sm font-semibold"
           >
             <Route size={15} /> {t("navigateInApp")}

@@ -4,27 +4,45 @@
 
 /* ─── LIGHT MODE ─── */
 :root {
-  --bg:        #F4F5F7;
-  --surface:   #FFFFFF;
-  --surface2:  #ECEEF2;
-  --border:    #D8DBE2;
-  --text:      #111318;
-  --muted:     #6B7280;
-  --accent:    #16A34A;   /* fallback; overridden by JS */
+  color-scheme: light;
+  --color-primary: #007AFF;
+  --color-destructive: #FF3B30;
+  --color-success: #34C759;
+  --color-bg: #FFFFFF;
+  --color-bg-secondary: #F2F2F7;
+  --color-label: #000000;
+  --color-label-secondary: rgba(60,60,67,0.6);
+  --color-route: #007AFF;
+  --color-route-traversed: rgba(142,142,147,0.5);
+  --color-route-alt: rgba(142,142,147,0.7);
+  --bg: var(--color-bg);
+  --surface: var(--color-bg);
+  --surface2: var(--color-bg-secondary);
+  --border: rgba(60,60,67,0.18);
+  --text: var(--color-label);
+  --muted: var(--color-label-secondary);
+  --accent: var(--color-primary);
   --accent-fg: #FFFFFF;
   --shadow:    0 2px 12px rgba(0,0,0,0.08);
 }
 
 /* ─── DARK MODE ─── */
 .dark {
-  --bg:        #0F1117;
-  --surface:   #1A1D27;
-  --surface2:  #22263A;
-  --border:    #2A2D3A;
-  --text:      #E8E9F0;
-  --muted:     #6B7280;
-  --accent:    #5CFFC0;
-  --accent-fg: #0F1117;
+  color-scheme: dark;
+  --color-primary: #0A84FF;
+  --color-destructive: #FF453A;
+  --color-bg: #000000;
+  --color-bg-secondary: #1C1C1E;
+  --color-label: #FFFFFF;
+  --color-label-secondary: rgba(235,235,245,0.6);
+  --bg: var(--color-bg);
+  --surface: var(--color-bg-secondary);
+  --surface2: #2C2C2E;
+  --border: rgba(235,235,245,0.18);
+  --text: var(--color-label);
+  --muted: var(--color-label-secondary);
+  --accent: var(--color-primary);
+  --accent-fg: #FFFFFF;
   --shadow:    0 2px 12px rgba(0,0,0,0.4);
 }
 

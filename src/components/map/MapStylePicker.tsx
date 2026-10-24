@@ -65,8 +65,8 @@ export function MapStylePicker({ value, onChange }: MapStylePickerProps) {
             aria-checked={selected}
             title={label}
             onClick={() => { onChange(id); setOpen(false); }}
-            className={`flex h-10 items-center gap-2 rounded-lg px-3 text-left text-sm font-medium transition-colors ${selected ? "text-white ring-2 ring-[#93C5FD] ring-offset-1" : "text-muted hover:bg-surface2 hover:text-base"}`}
-            style={selected ? { backgroundColor: NAVIGATION_BLUE } : undefined}
+            className={`flex h-11 items-center gap-2 rounded-lg px-3 text-left text-sm font-medium transition-colors ${selected ? "text-white ring-2 ring-[var(--color-primary)] ring-offset-1" : "text-muted hover:bg-surface2 hover:text-base"}`}
+            style={selected ? { backgroundColor: "var(--color-primary)" } : undefined}
           >
             <Icon size={16} />
             <span>{label}</span>

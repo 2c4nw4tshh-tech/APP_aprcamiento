@@ -71,8 +71,8 @@ export default function ProfilePage() {
               onClick={handleSignOut}
               className="flex items-center gap-3 bg-surface border border-red-200 dark:border-red-900 rounded-2xl px-4 py-4 mt-2"
             >
-              <LogOut size={18} className="text-red-500" />
-              <span className="flex-1 text-sm font-medium text-red-500">{t("signOut")}</span>
+              <LogOut size={18} className="text-[var(--color-destructive)]" />
+              <span className="flex-1 text-sm font-medium text-[var(--color-destructive)]">{t("signOut")}</span>
             </button>
           </div>
         </div>

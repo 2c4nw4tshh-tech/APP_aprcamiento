@@ -20,7 +20,7 @@ export function ArrivalModal({ open, driverStars, ownerStars, onClose }: Arrival
         role="dialog"
         aria-modal="true"
         aria-labelledby="arrival-modal-title"
-        className="relative w-full max-w-sm rounded-2xl border border-base bg-surface p-6 text-center shadow-2xl"
+        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl border border-base bg-surface p-6 text-center shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <button type="button" onClick={onClose} aria-label={t("closeDetails")} className="absolute right-3 top-3 rounded-full p-2 text-muted hover:bg-surface2">
@@ -41,7 +41,7 @@ export function ArrivalModal({ open, driverStars, ownerStars, onClose }: Arrival
             <p className="mt-1 text-xs text-muted">{t("ownerStarsEarned")}</p>
           </div>
         </div>
-        <button type="button" onClick={onClose} className="mt-5 w-full rounded-xl bg-[#3B82F6] px-4 py-3 text-sm font-semibold text-white shadow-md ring-2 ring-[#93C5FD] ring-offset-1">
+        <button type="button" onClick={onClose} className="mt-5 w-full rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white shadow-md ring-2 ring-[var(--color-primary)] ring-offset-1">
           {t("done")}
         </button>
       </section>

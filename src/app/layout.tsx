@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 // Separamos themeColor y viewport según el estándar de Next.js
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)",  color: "#0F1117" },
-    { media: "(prefers-color-scheme: light)", color: "#F4F5F7" },
+    { media: "(prefers-color-scheme: dark)",  color: "#000000" },
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
   ],
   width: "device-width",
   initialScale: 1,

@@ -132,7 +132,7 @@ export function SpotActionButton({ spotId, latitude, longitude, onCompleted, onR
         <div className="mt-2 rounded-xl border border-base bg-surface2 p-3">
           <p className="flex items-center gap-2 text-sm font-semibold">
             {geofencing.checkingIn ? (
-              <><LoaderCircle size={16} className="animate-spin text-[#3B82F6]" />{t("checkingIn")}</>
+              <><LoaderCircle size={16} className="animate-spin text-[var(--color-primary)]" />{t("checkingIn")}</>
             ) : (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F59E0B] px-2.5 py-1 text-xs font-bold text-gray-950">
                 <Radar size={14} /> {t("routeInProgress")}
@@ -142,7 +142,7 @@ export function SpotActionButton({ spotId, latitude, longitude, onCompleted, onR
           {geofencing.distanceMeters !== null && (
             <p className="mt-1 text-xs text-muted">{t("distanceToSpotMeters", { n: Math.round(geofencing.distanceMeters) })}</p>
           )}
-          {geofencing.error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{geofencing.error}</p>}
+          {geofencing.error && <p className="mt-2 text-xs text-[var(--color-destructive)]">{geofencing.error}</p>}
         </div>
         <ArrivalModal
           open={arrival !== null}
@@ -159,7 +159,7 @@ export function SpotActionButton({ spotId, latitude, longitude, onCompleted, onR
       type="button"
       onClick={() => void startRoute()}
       disabled={starting}
-      style={{ backgroundColor: "#3B82F6", color: "#FFFFFF", borderRadius: "16px", boxShadow: "0px 4px 16px rgba(59, 130, 246, 0.35)" }}
+      style={{ backgroundColor: "var(--color-primary)", color: "#FFFFFF", borderRadius: "16px", boxShadow: "0px 4px 16px color-mix(in srgb, var(--color-primary) 35%, transparent)" }}
       className="mt-2 inline-flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold"
     >
       {starting ? <LoaderCircle size={16} className="animate-spin" /> : <><LocateFixed size={16} /><Navigation size={14} /></>}

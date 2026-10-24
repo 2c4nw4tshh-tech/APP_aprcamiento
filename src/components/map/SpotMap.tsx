@@ -13,6 +13,7 @@ import { useMapStyles } from "@/hooks/useMapStyles";
 import { MapStylePicker } from "@/components/map/MapStylePicker";
 import { useInAppNavigation } from "@/hooks/useInAppNavigation";
 import { RouteCard } from "@/components/map/RouteCard";
+import { RouteLineOverlay, UserLocationIndicator } from "@/components/map/NavigationComponents";
 import { LatLng } from "@/types/navigation";
 
 interface SpotMapProps {
@@ -88,7 +89,7 @@ export default function SpotMap({
         <button
           type="button"
           onClick={!MAPBOX_TOKEN ? () => window.location.reload() : retryMap}
-          style={{ backgroundColor: "#3B82F6", color: "#FFFFFF", borderRadius: "12px" }}
+          style={{ backgroundColor: "var(--color-primary)", color: "#FFFFFF", borderRadius: "12px" }}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold"
         >
           <RefreshCw size={15} />
@@ -142,12 +143,16 @@ export default function SpotMap({
       >
         <NavigationControl position="bottom-right" />
 
-        <Marker latitude={safeCenter[0]} longitude={safeCenter[1]}>
-          <div className="relative flex items-center justify-center">
-            <div className="h-5 w-5 animate-pulse rounded-full border-2 border-white shadow-lg" style={{ backgroundColor: NAVIGATION_BLUE }} />
-            <div className="absolute h-10 w-10 animate-ping rounded-full" style={{ backgroundColor: `${NAVIGATION_BLUE}40` }} />
-          </div>
-        </Marker>
+        <UserLocationIndicator
+          position={inAppNavigation.currentLocation}
+          fallback={{ lat: safeCenter[0], lng: safeCenter[1] }}
+        />
+
+        {navigationDestination && (
+          <Marker latitude={navigationDestination.lat} longitude={navigationDestination.lng} anchor="bottom">
+            <MapPin size={34} className="drop-shadow-md" style={{ color: "var(--color-destructive)", fill: "var(--color-destructive)", stroke: "var(--color-bg)" }} aria-label="Destino" />
+          </Marker>
+        )}
 
         {safeSpots.map((spot) => {
           const selected = spot.id === selectedSpotId
@@ -163,9 +168,9 @@ export default function SpotMap({
             >
               <div className="relative flex cursor-pointer flex-col items-center transition-transform hover:scale-110">
                 {selected ? (
-                  <MapPin size={36} className="drop-shadow-lg" style={{ color: leavingSoon ? "#FACC15" : "#22C55E", fill: "currentColor", stroke: "#FFFFFF" }} />
+                  <MapPin size={36} className="drop-shadow-lg" style={{ color: leavingSoon ? "#FACC15" : "var(--color-success)", fill: "currentColor", stroke: "var(--color-bg)" }} />
                 ) : (
-                  <div className="h-5 w-5 rounded-full border-2 border-white shadow-lg" style={{ backgroundColor: leavingSoon ? "#FACC15" : "#22C55E" }} />
+                  <div className="h-5 w-5 rounded-full border-2 border-white shadow-lg" style={{ backgroundColor: leavingSoon ? "#FACC15" : "var(--color-success)" }} />
                 )}
                 {(spot.countdownMinutes ?? 0) > 0 && (
                   <span className="mt-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
@@ -176,6 +181,12 @@ export default function SpotMap({
             </Marker>
           );
         })}
+        <RouteLineOverlay
+          map={mapInstance}
+          mapReady={mapReady}
+          route={inAppNavigation.route}
+          traversedCoordinates={inAppNavigation.traversedCoordinates}
+        />
       </Map>
       {mapReady && <MapStylePicker value={styleId} onChange={selectStyle} />}
       {navigationOrigin && navigationDestination && (
@@ -186,6 +197,20 @@ export default function SpotMap({
           destinationLabel={navigationLabel}
           loading={inAppNavigation.loading}
           error={inAppNavigation.error}
+          navigationState={inAppNavigation.navigationState}
+          currentLocation={inAppNavigation.currentLocation}
+          progress={inAppNavigation.progress}
+          cameraMode={inAppNavigation.cameraMode}
+          voiceEnabled={inAppNavigation.voiceEnabled}
+          gpsLost={inAppNavigation.gpsLost}
+          poorGps={inAppNavigation.poorGps}
+          onStartNavigation={inAppNavigation.startNavigation}
+          onRetryRoute={inAppNavigation.retryRoute}
+          onRecenter={inAppNavigation.recenter}
+          onOverview={inAppNavigation.showOverview}
+          onToggleVoice={inAppNavigation.toggleVoice}
+          travelMode={inAppNavigation.travelMode}
+          onTravelModeChange={inAppNavigation.setTravelMode}
           onClose={() => {
             inAppNavigation.clearNavigation();
             onClearNavigation?.();
