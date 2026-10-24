@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRewardDisplayItem } from "@/lib/reward-display";
 
 export async function GET() {
   try {
@@ -13,7 +14,16 @@ export async function GET() {
       include: { redemptions: { include: { item: true }, orderBy: { createdAt: "desc" } } },
     });
     if (!user) return NextResponse.json({ success: false, data: null, error: "Not found" }, { status: 404 });
-    return NextResponse.json({ success: true, data: user });
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...user,
+        redemptions: user.redemptions.map((redemption) => ({
+          ...redemption,
+          item: getRewardDisplayItem(redemption.item),
+        })),
+      },
+    });
   } catch (error) {
     console.error("API Error:", error, "[GET /api/users/me]");
     return NextResponse.json({ success: false, data: null, error: "No se pudo cargar el usuario." }, { status: 500 });

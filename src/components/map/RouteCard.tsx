@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle, Navigation, Route as RouteIcon, X } from "lucide-react";
+import { Navigation, Route as RouteIcon, X } from "lucide-react";
 import { FloatingControlsStack, ManeuverBannerView, NavigationProgressSheet } from "@/components/map/NavigationComponents";
 import { getNavigationUrl, NavigationProvider } from "@/lib/gis";
 import { LatLng, NavigationState, RouteProgress, RouteResult, TravelMode, UserLocation } from "@/types/navigation";
@@ -83,7 +83,7 @@ export function RouteCard({
   if (isActive) {
     return createPortal(
       <div className="pointer-events-none fixed inset-0 z-[1550]">
-        <section className="pointer-events-auto absolute inset-x-3 top-[max(env(safe-area-inset-top),12px)] mx-auto max-w-xl overflow-hidden rounded-2xl border border-base bg-surface shadow-2xl">
+        <section className="pointer-events-auto absolute inset-x-3 top-[max(env(safe-area-inset-top),12px)] mx-auto max-w-xl overflow-hidden rounded-[28px] border border-base bg-surface shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
           {isArrived ? (
             <div className="flex items-center justify-between gap-4 px-5 py-4">
               <div>
@@ -148,8 +148,8 @@ export function RouteCard({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[1550] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-    <section role="dialog" aria-modal="true" className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-base bg-surface shadow-2xl">
+    <div className="fixed inset-0 z-[1550] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
+    <section role="dialog" aria-modal="true" className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[28px] border border-base bg-surface shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
       <header className="flex items-start justify-between gap-3 border-b border-base px-4 py-3">
         <div className="flex items-center gap-2">
           <RouteIcon size={19} className="shrink-0" style={{ color: NAVIGATION_BLUE }} />
@@ -172,9 +172,11 @@ export function RouteCard({
 
       <div className="px-4 py-3">
         {loading ? (
-          <p className="flex items-center gap-2 py-2 text-sm text-muted" role="status">
-            <LoaderCircle size={16} className="animate-spin" /> {t("routeCalculating")}
-          </p>
+          <div role="status" aria-label={t("routeCalculating")} className="space-y-3 py-3">
+            <div className="skeleton-shimmer h-5 w-2/3 animate-pulse rounded-full bg-gray-200 dark:bg-zinc-800" />
+            <div className="skeleton-shimmer h-4 w-1/2 animate-pulse rounded-full bg-gray-200 dark:bg-zinc-800" />
+            <div className="skeleton-shimmer h-11 w-full animate-pulse rounded-xl bg-gray-200 dark:bg-zinc-800" />
+          </div>
         ) : error ? (
           <div className="py-2">
             <p role="alert" className="text-sm text-[var(--color-destructive)]">{error}</p>

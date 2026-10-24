@@ -17,37 +17,37 @@ async function main() {
       },
       {
         id: "reward-transport-car",
-        name: "Emoji coche",
-        description: "Desbloquea el marcador 🚗 para tus plazas.",
+        name: "Marcador coche",
+        description: "Desbloquea un marcador de coche para tus plazas.",
         type: "transport_emoji",
-        value: "🚗",
+        value: "car",
         cost: 120,
         emoji: "🚗",
       },
       {
         id: "reward-transport-bike",
-        name: "Emoji moto",
-        description: "Desbloquea el marcador 🏍️ para tus plazas.",
+        name: "Marcador moto",
+        description: "Desbloquea un marcador de moto para tus plazas.",
         type: "transport_emoji",
-        value: "🏍️",
+        value: "motorcycle",
         cost: 180,
         emoji: "🏍️",
       },
       {
         id: "reward-transport-scooter",
-        name: "Emoji scooter",
-        description: "Desbloquea el marcador 🛵 para tus plazas.",
+        name: "Marcador scooter",
+        description: "Desbloquea un marcador de scooter para tus plazas.",
         type: "transport_emoji",
-        value: "🛵",
+        value: "scooter",
         cost: 220,
         emoji: "🛵",
       },
       {
         id: "reward-custom-marker",
-        name: "Emoji libre",
-        description: "Desbloquea la opción de elegir cualquier emoji como icono de ubicación.",
+        name: "Marcador personalizado",
+        description: "Desbloquea un marcador personalizado para tus plazas.",
         type: "custom_marker",
-        value: "✨",
+        value: "custom",
         cost: 500,
         emoji: "✨",
       },
@@ -98,7 +98,7 @@ async function main() {
       },
     ],
   });
-  console.log("✅ Rewards seeded");
+  console.log("Rewards seeded");
 }
 
 main()

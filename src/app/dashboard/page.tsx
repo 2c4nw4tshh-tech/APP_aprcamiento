@@ -12,9 +12,10 @@ import { SpotDetailModal } from "@/components/modals/SpotDetailModal";
 import { Button } from "@/components/ui/Button";
 import { GlobalLoader } from "@/components/ui/GlobalLoader";
 import { NudgeBanner } from "@/components/ui/NudgeBanner";
-import { RefreshCw } from "lucide-react";
+import { Radar, RefreshCw } from "lucide-react";
 import { fetchNearbySpots } from "@/lib/spots-api";
 import { LatLng } from "@/types/navigation";
+import { triggerHaptic } from "@/lib/haptics";
 
 const SpotMap = dynamic(
   () => import("@/components/map/SpotMap"),
@@ -98,6 +99,7 @@ function DashboardContent() {
 
   const handleRadar = async () => {
     if (!userLocation) return;
+    triggerHaptic();
     setRadarActive(true);
     try {
       const spots = await fetchNearbySpots(`/api/spots/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=500`);
@@ -200,7 +202,7 @@ function DashboardContent() {
           onClick={handleRadar}
           className={`fixed bottom-24 right-4 z-[1100] flex items-center gap-2 rounded-full bg-accent px-4 py-3 text-sm font-bold text-[var(--accent-fg)] shadow-lg transition-all ${radarActive ? "scale-105 ring-4 ring-accent/30" : ""}`}
         >
-          <span className="text-base">📡</span>
+          <Radar size={18} aria-hidden="true" />
           {t("radarSearch")}
         </button>
 

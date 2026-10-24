@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRewardDisplayItem, getRewardValue } from "@/lib/reward-display";
 
 export async function GET() {
   try {
     const items = await prisma.rewardItem.findMany({ orderBy: { cost: "asc" } });
-    return NextResponse.json({ success: true, data: items ?? [] });
+    const normalizedItems = (items ?? []).map(getRewardDisplayItem);
+    return NextResponse.json({ success: true, data: normalizedItems });
   } catch (error) {
     console.error("API Error:", error, "[GET /api/rewards]");
     return NextResponse.json({ success: false, data: [], error: "No se pudieron cargar las recompensas." }, { status: 500 });
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest) {
         where: { id: user.id },
         data: {
           accentColor: item.type === "accent_color" ? item.value : undefined,
-          customMarker: item.type === "transport_emoji" || item.type === "custom_marker" ? item.value : undefined,
+          customMarker: item.type === "transport_emoji" || item.type === "custom_marker" ? getRewardValue(item) : undefined,
         },
       });
     });
@@ -96,7 +98,7 @@ export async function PATCH(req: NextRequest) {
       where: { id: user.id },
       data: {
         accentColor: item.type === "accent_color" ? item.value : undefined,
-        customMarker: item.type === "transport_emoji" || item.type === "custom_marker" ? item.value : undefined,
+        customMarker: item.type === "transport_emoji" || item.type === "custom_marker" ? getRewardValue(item) : undefined,
       },
     });
 

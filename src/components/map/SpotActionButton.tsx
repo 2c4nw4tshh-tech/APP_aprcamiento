@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useSession } from "next-auth/react";
-import { LocateFixed, LoaderCircle, Navigation, Radar } from "lucide-react";
+import { LocateFixed, Navigation, Radar } from "lucide-react";
 import toast from "react-hot-toast";
 import { safeFetchJson } from "@/lib/safe-fetch";
 import { createFallbackRoute, fetchRoute } from "@/lib/directions";
@@ -11,6 +11,7 @@ import { useAppStore } from "@/store";
 import { Coordinates, User } from "@/types";
 import { ReservationRecord } from "@/types";
 import { ArrivalModal } from "@/components/modals/ArrivalModal";
+import { triggerHaptic } from "@/lib/haptics";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
@@ -79,6 +80,7 @@ export function SpotActionButton({ spotId, latitude, longitude, onCompleted, onR
   });
 
   const startRoute = async () => {
+    triggerHaptic();
     setStarting(true);
     try {
       const origin = await getCurrentPosition();
@@ -132,7 +134,7 @@ export function SpotActionButton({ spotId, latitude, longitude, onCompleted, onR
         <div className="mt-2 rounded-xl border border-base bg-surface2 p-3">
           <p className="flex items-center gap-2 text-sm font-semibold">
             {geofencing.checkingIn ? (
-              <><LoaderCircle size={16} className="animate-spin text-[var(--color-primary)]" />{t("checkingIn")}</>
+              <><span aria-hidden="true" className="h-4 w-4 animate-pulse rounded-full bg-[var(--color-primary)]/50" />{t("checkingIn")}</>
             ) : (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F59E0B] px-2.5 py-1 text-xs font-bold text-gray-950">
                 <Radar size={14} /> {t("routeInProgress")}
@@ -162,7 +164,7 @@ export function SpotActionButton({ spotId, latitude, longitude, onCompleted, onR
       style={{ backgroundColor: "var(--color-primary)", color: "#FFFFFF", borderRadius: "16px", boxShadow: "0px 4px 16px color-mix(in srgb, var(--color-primary) 35%, transparent)" }}
       className="mt-2 inline-flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold"
     >
-      {starting ? <LoaderCircle size={16} className="animate-spin" /> : <><LocateFixed size={16} /><Navigation size={14} /></>}
+      {starting ? <span aria-hidden="true" className="h-4 w-4 animate-pulse rounded-full bg-white/60" /> : <><LocateFixed size={16} /><Navigation size={14} /></>}
       {starting ? t("startingRoute") : t("startRouteAndReserve")}
     </button>
   );

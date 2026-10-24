@@ -14,7 +14,7 @@ export function Button({ variant = "primary", size = "md", loading, className, c
       {...props}
       disabled={disabled || loading}
       className={clsx(
-        "inline-flex items-center justify-center font-display font-semibold rounded-2xl transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed select-none",
+        "inline-flex items-center justify-center font-display font-semibold rounded-2xl transition-transform duration-200 ease-out active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed select-none",
         size === "sm" && "px-4 py-2 text-sm",
         size === "md" && "px-6 py-3 text-base",
         size === "lg" && "px-6 py-4 text-base w-full",
@@ -27,7 +27,7 @@ export function Button({ variant = "primary", size = "md", loading, className, c
         className
       )}
     >
-      {loading && <span className="h-4 w-4 mr-2 rounded-full border-2 border-current border-t-transparent animate-spin" />}
+      {loading && <span aria-hidden="true" className="mr-2 h-4 w-4 animate-pulse rounded-full bg-current/40" />}
       {children}
     </button>
   );

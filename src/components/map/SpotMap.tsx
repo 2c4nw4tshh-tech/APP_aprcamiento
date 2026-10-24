@@ -3,8 +3,8 @@
 import Map, { Marker, NavigationControl } from "react-map-gl";
 import type { MapRef } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { MapPin, RefreshCw } from "lucide-react";
-import { useRef, useState } from "react";
+import { AlertTriangle, CarFront, MapPin, RefreshCw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { NearbySpot } from "@/types";
 import { useAppStore } from "@/store";
 import { GlobalLoader } from "@/components/ui/GlobalLoader";
@@ -15,6 +15,8 @@ import { useInAppNavigation } from "@/hooks/useInAppNavigation";
 import { RouteCard } from "@/components/map/RouteCard";
 import { RouteLineOverlay, UserLocationIndicator } from "@/components/map/NavigationComponents";
 import { LatLng } from "@/types/navigation";
+import { triggerHaptic } from "@/lib/haptics";
+import { getPersonalReleasedSpotIds, personalReleasedSpotsUpdatedEvent } from "@/lib/personal-released-spots";
 
 interface SpotMapProps {
   center?: [number, number];
@@ -54,11 +56,13 @@ export default function SpotMap({
   onClearNavigation,
 }: SpotMapProps) {
   const t = useAppStore((store) => store.t);
+  const currentUserId = useAppStore((store) => store.user?.id ?? null);
   const mapRef = useRef<MapRef>(null);
   const [mapInstance, setMapInstance] = useState<MapRef | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [mapAttempt, setMapAttempt] = useState(0);
+  const [personalReleasedSpotIds, setPersonalReleasedSpotIds] = useState<string[]>([]);
   const { styleId, initialStyleId, selectStyle } = useMapStyles(mapInstance, mapReady);
   const inAppNavigation = useInAppNavigation(
     mapInstance,
@@ -73,6 +77,26 @@ export default function SpotMap({
   const safeSpots = Array.isArray(spots)
     ? spots.filter((spot) => Number.isFinite(spot?.latitude) && Number.isFinite(spot?.longitude))
     : [];
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setPersonalReleasedSpotIds([]);
+      return;
+    }
+    const refreshPersonalSpots = (event?: Event) => {
+      const customEvent = event as CustomEvent<{ userId?: string }> | undefined;
+      if (customEvent?.detail?.userId && customEvent.detail.userId !== currentUserId) return;
+      setPersonalReleasedSpotIds(getPersonalReleasedSpotIds(currentUserId));
+    };
+    refreshPersonalSpots();
+    const updateEvent = personalReleasedSpotsUpdatedEvent();
+    window.addEventListener(updateEvent, refreshPersonalSpots);
+    window.addEventListener("storage", refreshPersonalSpots);
+    return () => {
+      window.removeEventListener(updateEvent, refreshPersonalSpots);
+      window.removeEventListener("storage", refreshPersonalSpots);
+    };
+  }, [currentUserId]);
   const retryMap = () => {
     setMapError(null);
     setMapReady(false);
@@ -103,7 +127,7 @@ export default function SpotMap({
     <div className="w-full h-full min-h-[350px] rounded-2xl overflow-hidden relative z-0 border border-base">
       {locationWarning && (
         <div className="absolute inset-x-4 top-4 z-10 rounded-2xl border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 backdrop-blur-sm">
-          <p className="text-[11px] leading-snug text-yellow-700 dark:text-yellow-200">⚠️ {locationWarning}</p>
+          <p className="flex items-start gap-2 text-[11px] leading-snug text-yellow-700 dark:text-yellow-200"><AlertTriangle size={14} className="shrink-0" aria-hidden="true" />{locationWarning}</p>
         </div>
       )}
 
@@ -157,6 +181,7 @@ export default function SpotMap({
         {safeSpots.map((spot) => {
           const selected = spot.id === selectedSpotId
             || (navigationDestination?.lat === spot.latitude && navigationDestination?.lng === spot.longitude);
+          const personalReleased = spot.leaverId === currentUserId && personalReleasedSpotIds.includes(spot.id);
           const leavingSoon = spot.isLeaving || (spot.countdownMinutes ?? 0) > 0;
           return (
             <Marker
@@ -164,10 +189,14 @@ export default function SpotMap({
               latitude={spot.latitude}
               longitude={spot.longitude}
               anchor={selected ? "bottom" : "center"}
-              onClick={(event) => { event.originalEvent.stopPropagation(); onSpotClick?.(spot); }}
+              onClick={(event) => { event.originalEvent.stopPropagation(); triggerHaptic(); onSpotClick?.(spot); }}
             >
-              <div className="relative flex cursor-pointer flex-col items-center transition-transform hover:scale-110">
-                {selected ? (
+              <div data-clickable="true" className="relative flex cursor-pointer flex-col items-center transition-transform duration-200 ease-out hover:scale-105">
+                {personalReleased ? (
+                  <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-white bg-[var(--color-primary)] text-white shadow-lg" aria-label="Tu plaza liberada" title="Tu plaza liberada">
+                    <CarFront size={22} aria-hidden="true" />
+                  </span>
+                ) : selected ? (
                   <MapPin size={36} className="drop-shadow-lg" style={{ color: leavingSoon ? "#FACC15" : "var(--color-success)", fill: "currentColor", stroke: "var(--color-bg)" }} />
                 ) : (
                   <div className="h-5 w-5 rounded-full border-2 border-white shadow-lg" style={{ backgroundColor: leavingSoon ? "#FACC15" : "var(--color-success)" }} />

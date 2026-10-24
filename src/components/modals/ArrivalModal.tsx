@@ -2,6 +2,7 @@
 
 import { Check, Star, X } from "lucide-react";
 import { useAppStore } from "@/store";
+import { triggerHaptic } from "@/lib/haptics";
 
 interface ArrivalModalProps {
   open: boolean;
@@ -20,7 +21,7 @@ export function ArrivalModal({ open, driverStars, ownerStars, onClose }: Arrival
         role="dialog"
         aria-modal="true"
         aria-labelledby="arrival-modal-title"
-        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl border border-base bg-surface p-6 text-center shadow-2xl"
+        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-[28px] border border-base bg-surface p-6 text-center shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
         onClick={(event) => event.stopPropagation()}
       >
         <button type="button" onClick={onClose} aria-label={t("closeDetails")} className="absolute right-3 top-3 rounded-full p-2 text-muted hover:bg-surface2">
@@ -41,7 +42,7 @@ export function ArrivalModal({ open, driverStars, ownerStars, onClose }: Arrival
             <p className="mt-1 text-xs text-muted">{t("ownerStarsEarned")}</p>
           </div>
         </div>
-        <button type="button" onClick={onClose} className="mt-5 w-full rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white shadow-md ring-2 ring-[var(--color-primary)] ring-offset-1">
+        <button type="button" onClick={() => { triggerHaptic(); onClose(); }} className="mt-5 w-full rounded-[18px] bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white shadow-md transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ring-2 ring-[var(--color-primary)] ring-offset-1">
           {t("done")}
         </button>
       </section>

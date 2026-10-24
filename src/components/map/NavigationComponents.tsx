@@ -31,7 +31,7 @@ export function ManeuverBannerView({ instruction, streetName, distanceMeters, lo
     <details className="border-b border-base bg-surface shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
       <summary className="flex min-h-[76px] cursor-pointer list-none items-center gap-4 px-4 py-3">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[var(--color-primary)] text-white" aria-hidden="true">
-          {loading ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" /> : <Navigation size={24} className="-rotate-45" />}
+          {loading ? <span className="h-5 w-5 animate-pulse rounded-full bg-white/60" /> : <Navigation size={24} className="-rotate-45" />}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-lg font-semibold leading-tight text-base" key={instruction}>{instruction}</span>
@@ -65,7 +65,7 @@ export function NavigationProgressSheet({ progress, destinationLabel, steps = []
 
   return (
     <section
-      className="rounded-t-2xl border border-base bg-surface px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.15)] transition-[max-height] duration-300"
+      className="rounded-t-[32px] border border-base bg-surface px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.15)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
       aria-label="Progreso de navegación"
       onTouchStart={(event) => { touchStartY.current = event.touches[0]?.clientY ?? null; }}
       onTouchEnd={(event) => {

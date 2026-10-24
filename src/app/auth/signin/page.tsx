@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/store";
 import { GlobalLoader } from "@/components/ui/GlobalLoader";
+import { MapPin } from "lucide-react";
 
 export default function SignInPage() {
   const t = useAppStore((state) => state.t);
@@ -51,7 +52,7 @@ export default function SignInPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-10">
-          <div className="text-6xl mb-4">🅿️</div>
+          <MapPin size={48} className="mx-auto mb-4 text-[var(--color-primary)]" aria-hidden="true" />
           <h1 className="font-display font-bold text-3xl">
             Spot<span className="text-accent">Sync</span>
           </h1>
@@ -82,7 +83,7 @@ export default function SignInPage() {
             className="flex items-center justify-center gap-3 w-full bg-accent text-[var(--accent-fg)] rounded-2xl px-5 py-4 font-display font-semibold text-base disabled:opacity-60 transition-all active:scale-[0.98]"
           >
             {loading
-              ? <span className="w-5 h-5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+              ? <span aria-hidden="true" className="h-5 w-5 animate-pulse rounded-full bg-current/40" />
               : t("signInButton")
             }
           </button>

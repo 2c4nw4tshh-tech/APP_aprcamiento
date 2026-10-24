@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { fetchNearbySpots } from "@/lib/spots-api";
 import { safeFetchJson } from "@/lib/safe-fetch";
 import { NavigationChooser } from "@/components/ui/NavigationChooser";
+import { triggerHaptic } from "@/lib/haptics";
 
 const SpotMap = dynamic(() => import("@/components/map/SpotMap"), { ssr: false });
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
@@ -115,6 +116,7 @@ export default function FindPage() {
   }, [userLocation, coords, destination, radius, vehicleFilters, zoneFilters, sizeFilters, setNearbySpots]);
 
   const selectDestination = (nextDestination: Destination) => {
+    triggerHaptic();
     setDestination(nextDestination);
     setDestinationQuery(nextDestination.label);
     setSuggestions([]);
@@ -236,15 +238,17 @@ export default function FindPage() {
         <main className="flex-1 overflow-y-auto px-4 py-4 pb-24 flex flex-col gap-3">
           {!hasSearchReference ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
-              <div className="text-5xl mb-4">📍</div>
+              <MapPin size={38} className="mb-4 text-[var(--color-primary)]" aria-hidden="true" />
               <p className="font-display font-semibold">{geoError ?? t("dashboardEnableLocation")}</p>
               <Button onClick={() => getLocation()} size="sm" className="mt-4">{t("allowLocation")}</Button>
             </div>
           ) : loading ? (
-            [1, 2, 3].map((i) => <div key={i} className="h-28 bg-surface rounded-3xl animate-pulse" />)
+            [1, 2, 3].map((i) => (
+              <div key={i} aria-hidden="true" className="skeleton-shimmer h-28 animate-pulse rounded-[28px] bg-gray-200 dark:bg-zinc-800" />
+            ))
           ) : nearbySpots.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
-              <div className="text-5xl mb-4">🅿️</div>
+              <MapPin size={38} className="mb-4 text-muted" aria-hidden="true" />
               <p className="font-display font-semibold">{t("noSpotsNearby")}</p>
               <p className="text-muted text-sm mt-1">{t("checkLater")}</p>
             </div>

@@ -5,7 +5,7 @@ import { useAppStore } from "@/store";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { AuthGuard } from "@/components/ui/AuthGuard";
 import { Button } from "@/components/ui/Button";
-import { Settings, LogOut, Star, Zap } from "lucide-react";
+import { Settings, LogOut, Star, Zap, Gift } from "lucide-react";
 import Link from "next/link";
 
 export default function ProfilePage() {
@@ -63,7 +63,7 @@ export default function ProfilePage() {
               <span className="text-muted text-xs">›</span>
             </Link>
             <Link href="/rewards" className="flex items-center gap-3 bg-surface border border-base rounded-2xl px-4 py-4">
-              <span className="text-lg">🎁</span>
+              <Gift size={19} className="text-[var(--color-primary)]" aria-hidden="true" />
               <span className="flex-1 text-sm font-medium">{t("rewardsShop")}</span>
               <span className="text-accent text-xs font-semibold">{u?.points ?? 0} pts</span>
             </Link>

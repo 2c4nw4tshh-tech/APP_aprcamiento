@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import { useSession } from "next-auth/react";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { AuthGuard } from "@/components/ui/AuthGuard";
-import { Check, ChevronLeft, Smile } from "lucide-react";
+import { Check, ChevronLeft, Smile, Sun, Moon, Monitor, Languages, MapPin } from "lucide-react";
 import Link from "next/link";
 import { Language, Theme } from "@/types";
 import toast from "react-hot-toast";
@@ -161,10 +161,10 @@ export default function SettingsPage() {
           <section>
             <label className="text-xs font-semibold text-muted uppercase tracking-wide mb-2 block">{t("language")}</label>
             <div className="grid grid-cols-1 gap-3">
-              {([['es', '🇪🇸', 'Español'], ['en', '🇬🇧', 'English']] as [Language, string, string][]).map(([code, flag, label]) => (
+              {([['es', 'Español'], ['en', 'English']] as [Language, string][]).map(([code, label]) => (
                 <button key={code} onClick={() => void handleLanguageChange(code)}
-                  className={`flex items-center justify-center gap-2 rounded-2xl py-4 text-sm font-semibold border transition-colors ${lang === code ? "bg-accent border-accent text-[var(--accent-fg)]" : "bg-surface border-base text-muted"}`}>
-                  <span className="text-xl">{flag}</span> {label}
+                  className={`flex items-center justify-center gap-2 rounded-[18px] py-4 text-sm font-semibold border transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${lang === code ? "bg-accent border-accent text-[var(--accent-fg)]" : "bg-surface border-base text-muted"}`}>
+                  <Languages size={18} aria-hidden="true" /> {label}
                 </button>
               ))}
             </div>
@@ -174,16 +174,16 @@ export default function SettingsPage() {
           <section>
             <label className="text-xs font-semibold text-muted uppercase tracking-wide mb-2 block">{t("theme")}</label>
             <div className="grid grid-cols-3 gap-2">
-              {([["light", "☀️", t("themeLight")], ["dark", "🌙", t("themeDark")], ["system", "⚙️", t("themeSystem")]] as [Theme, string, string][]).map(([val, icon, label]) => (
+              {([["light", Sun, t("themeLight")], ["dark", Moon, t("themeDark")], ["system", Monitor, t("themeSystem")]] as [Theme, typeof Sun, string][]).map(([val, Icon, label]) => (
                 <button key={val} onClick={() => void handleThemeChange(val)}
-                  className={`flex flex-col items-center gap-1 rounded-2xl py-4 text-sm font-semibold border transition-colors ${theme === val ? "bg-accent border-accent text-[var(--accent-fg)]" : "bg-surface border-base text-muted"}`}>
-                  <span className="text-2xl">{icon}</span>
+                  className={`flex flex-col items-center gap-1 rounded-[18px] py-4 text-sm font-semibold border transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${theme === val ? "bg-accent border-accent text-[var(--accent-fg)]" : "bg-surface border-base text-muted"}`}>
+                  <Icon size={22} aria-hidden="true" />
                   <span className="text-xs">{label}</span>
                 </button>
               ))}
             </div>
             <p className="text-xs text-muted mt-2 text-center">
-              Modo actual: {resolvedTheme === "dark" ? "🌙 Oscuro" : "☀️ Claro"}
+              Modo actual: {resolvedTheme === "dark" ? "Oscuro" : "Claro"}
             </p>
           </section>
 
@@ -209,7 +209,7 @@ export default function SettingsPage() {
                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-base text-xl"
                         style={{ background: "var(--surface2)" }}
                       >
-                        {item.value || item.emoji}
+                        <MapPin size={18} className="text-[var(--color-primary)]" aria-hidden="true" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold">{item.name}</span>

@@ -6,8 +6,10 @@ import { useAppStore } from "@/store";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { VehicleSize, ParkingType, ZoneType, SpotSize, Spot, User } from "@/types";
 import toast from "react-hot-toast";
-import { MapPin, Car, Layers, AlignLeft, Clock, TimerReset, LoaderCircle } from "lucide-react";
+import { MapPin, Car, Layers, AlignLeft, Clock, TimerReset, CircleCheck, Clock3 } from "lucide-react";
 import { safeFetchJson } from "@/lib/safe-fetch";
+import { triggerHaptic } from "@/lib/haptics";
+import { rememberPersonalReleasedSpot } from "@/lib/personal-released-spots";
 
 export function ReleaseSpotForm() {
   const router = useRouter();
@@ -60,6 +62,7 @@ export function ReleaseSpotForm() {
       getLocation();
       return;
     }
+    triggerHaptic();
     setSubmitting(true);
     try {
       const payload = {
@@ -75,21 +78,20 @@ export function ReleaseSpotForm() {
         releaseDelayMinutes: form.isLeaving ? releaseDelay : 0,
         moreSpotsNearby: hasMoreSpots ? moreSpotsCount : 0,
       };
-      console.log("[release] enviando payload", payload);
       const result = await safeFetchJson<{ data?: Spot; pointsEarned?: number; user?: User; error?: string }>("/api/spots/release", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }, {});
       const releasedSpot = result.data.data;
-      console.log("[release] respuesta", result.ok, result.data);
       if (!result.ok || !releasedSpot) {
-        console.error("[release] respuesta de la API", result);
         const reason = result.data.error ?? result.error ?? "No se pudo publicar la plaza.";
         throw new Error(`${reason} (HTTP ${result.status ?? "?"}) ${JSON.stringify(result.body ?? result.data)}`);
       }
       const json = result.data;
       setCurrentSpot(releasedSpot);
+      const ownerId = user?.id ?? releasedSpot.leaverId;
+      if (ownerId) rememberPersonalReleasedSpot(ownerId, releasedSpot.id);
       if (json.user) setUser(json.user);
       else if (user) setUser({ ...user, points: user.points + (json.pointsEarned ?? 10) });
       await update();
@@ -97,10 +99,8 @@ export function ReleaseSpotForm() {
       toast.success(t("spotReleased", { n: json.pointsEarned ?? 10 }));
       router.push("/release/broadcasting");
     } catch (err) {
-      console.error("DETALLE_ERROR_LIBERAR:", err);
       const message = err instanceof Error ? err.message : JSON.stringify(err);
       toast.error(message);
-      window.alert("FALLO REAL: " + message); // temporal: depuración
     } finally {
       setSubmitting(false);
     }
@@ -121,7 +121,9 @@ export function ReleaseSpotForm() {
         >
           <MapPin size={16} style={{ color: coords ? "var(--color-success)" : "var(--muted)" }} />
           <span className="text-sm">
-            {locLoading ? "…" : coords ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` : t("allowLocation")}
+            {locLoading
+              ? <span aria-hidden="true" className="skeleton-shimmer inline-block h-3 w-20 animate-pulse rounded-full bg-gray-200 dark:bg-zinc-800" />
+              : coords ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` : t("allowLocation")}
           </span>
         </button>
         <input
@@ -159,7 +161,10 @@ export function ReleaseSpotForm() {
                   : { backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: "16px" }}
                 className="flex-1 py-3 text-sm font-semibold transition-colors"
             >
-              {val ? `🟡 ${t("iAmLeaving")}` : `🟢 ${t("available")}`}
+              <span className="inline-flex items-center justify-center gap-2">
+                {val ? <Clock3 size={16} aria-hidden="true" /> : <CircleCheck size={16} aria-hidden="true" />}
+                {val ? t("iAmLeaving") : t("available")}
+              </span>
             </button>
           ))}
         </div>
@@ -271,7 +276,7 @@ export function ReleaseSpotForm() {
         style={{ backgroundColor: "var(--color-success)", color: "#FFFFFF", borderRadius: "16px", boxShadow: "0px 4px 16px color-mix(in srgb, var(--color-success) 35%, transparent)" }}
         className="inline-flex min-h-14 w-full items-center justify-center gap-2 px-6 py-4 text-base font-bold disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {submitting ? <LoaderCircle size={18} className="animate-spin" /> : "⚡"}
+        {submitting ? <span aria-hidden="true" className="h-5 w-5 animate-pulse rounded-full bg-white/50" /> : <MapPin size={18} aria-hidden="true" />}
         {t("broadcastSpot")}
       </button>
     </div>

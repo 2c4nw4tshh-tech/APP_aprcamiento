@@ -8,6 +8,7 @@ import { GlobalLoader } from "@/components/ui/GlobalLoader";
 import { Language } from "@/types";
 import toast from "react-hot-toast";
 import { safeFetchJson } from "@/lib/safe-fetch";
+import { Languages, MapPin } from "lucide-react";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -56,7 +57,7 @@ export default function OnboardingPage() {
     <div className="fixed inset-0 bg-bg flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">👋</div>
+          <MapPin size={42} className="mx-auto mb-3 text-[var(--color-primary)]" aria-hidden="true" />
           <h1 className="font-display font-bold text-2xl">{t("welcome")}</h1>
           <p className="text-muted text-sm mt-2">{t("onboardingSubtitle")}</p>
         </div>
@@ -81,7 +82,7 @@ export default function OnboardingPage() {
               {t("preferredLanguage")}
             </label>
             <div className="grid grid-cols-1 gap-3">
-              {([['es', '🇪🇸', 'Español']] as [Language, string, string][]).map(([code, flag, label]) => (
+              {([['es', 'Español']] as [Language, string][]).map(([code, label]) => (
                 <button
                   key={code}
                   onClick={() => setLang(code)}
@@ -89,7 +90,7 @@ export default function OnboardingPage() {
                     lang === code ? "bg-accent border-accent text-[var(--accent-fg)]" : "bg-surface border-base text-muted"
                   }`}
                 >
-                  <span className="text-xl">{flag}</span> {label}
+                  <Languages size={18} aria-hidden="true" /> {label}
                 </button>
               ))}
             </div>

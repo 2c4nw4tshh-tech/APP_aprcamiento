@@ -5,7 +5,7 @@ import { RewardItem } from "@/types";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { AuthGuard } from "@/components/ui/AuthGuard";
 import { Button } from "@/components/ui/Button";
-import { Zap } from "lucide-react";
+import { CarFront, Check, MapPin, Zap } from "lucide-react";
 import toast from "react-hot-toast";
 import { safeFetchJson } from "@/lib/safe-fetch";
 import { useSession } from "next-auth/react";
@@ -72,7 +72,7 @@ export default function RewardsPage() {
         next.add(item.id);
         return next;
       });
-      toast.success(`🎉 ${t("rewardActivated", { name: item.name })}`);
+      toast.success(t("rewardActivated", { name: item.name }));
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -102,7 +102,7 @@ export default function RewardsPage() {
         {/* Earn tip */}
         <div className="mx-4 mt-3 bg-surface border border-base rounded-2xl px-4 py-3">
           <p className="text-xs text-muted">
-            💡 {t("rewardEarnTip")}
+            <Zap size={14} className="mr-1 inline-block text-[var(--color-primary)]" aria-hidden="true" /> {t("rewardEarnTip")}
           </p>
         </div>
 
@@ -125,7 +125,7 @@ export default function RewardsPage() {
                     className="w-full h-14 rounded-2xl flex items-center justify-center text-3xl"
                     style={{ background: "var(--surface2)", border: "2px solid var(--border)" }}
                   >
-                    {item.emoji}
+                    {item.emoji || <CarFront size={24} className="text-[var(--color-primary)]" aria-hidden="true" />}
                   </div>
 
                   <div>
@@ -144,7 +144,7 @@ export default function RewardsPage() {
                     onClick={() => handleRedeem(item)}
                     className={`text-xs ${owned ? "opacity-60" : !canAfford ? "opacity-40" : ""}`}
                   >
-                    {owned ? `✓ ${t("redeemed")}` : `🪙 ${item.cost} pts`}
+                    {owned ? <><Check size={14} aria-hidden="true" /> {t("redeemed")}</> : `${item.cost} pts`}
                   </Button>
                 </div>
               );

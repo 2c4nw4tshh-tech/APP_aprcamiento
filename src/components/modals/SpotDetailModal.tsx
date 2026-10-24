@@ -7,6 +7,7 @@ import { X, MapPin, Clock, Car, AlertTriangle, Star, Route } from "lucide-react"
 import { useState } from "react";
 import { NavigationChooser } from "@/components/ui/NavigationChooser";
 import { SpotActionButton } from "@/components/map/SpotActionButton";
+import { triggerHaptic } from "@/lib/haptics";
 
 interface Props {
   spot: NearbySpot;
@@ -31,9 +32,9 @@ export function SpotDetailModal({ spot, onClose, onOccupied, onNavigateInApp, on
   const isOld = spot.minutesAgo > 30;
 
   return (
-    <div className="fixed inset-0 z-[1500] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[1500] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]" onClick={onClose}>
       <div
-        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-base bg-surface p-5 shadow-2xl"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[28px] border border-base bg-surface p-5 shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -129,9 +130,9 @@ export function SpotDetailModal({ spot, onClose, onOccupied, onNavigateInApp, on
         {onNavigateInApp && (
           <button
             type="button"
-            onClick={onNavigateInApp}
+            onClick={() => { triggerHaptic(); onNavigateInApp(); }}
             style={{ backgroundColor: "var(--color-primary)", color: "#FFFFFF", borderRadius: "16px", boxShadow: "0px 4px 16px color-mix(in srgb, var(--color-primary) 35%, transparent)" }}
-            className="mt-2 inline-flex w-full items-center justify-center gap-2 px-4 py-2 text-sm font-semibold"
+            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-[18px] px-4 py-2 text-sm font-semibold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
           >
             <Route size={15} /> {t("navigateInApp")}
           </button>

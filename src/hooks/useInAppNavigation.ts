@@ -6,6 +6,8 @@ import { fetchRoute } from "@/lib/directions";
 import { haversineMeters } from "@/lib/gis";
 import { BrowserLocationService } from "@/lib/location-service";
 import { NavigationStateManager } from "@/lib/navigation-state-manager";
+import { getDeviceHeading, requestDeviceOrientationPermission } from "@/lib/device-orientation";
+import { triggerHaptic } from "@/lib/haptics";
 import { LatLng, NavigationState, RouteProgress, RouteResult, TravelMode, UserLocation } from "@/types/navigation";
 
 type CameraMode = "following" | "overview" | "free";
@@ -85,12 +87,15 @@ export function useInAppNavigation(
   const [travelMode, setTravelMode] = useState<TravelMode>("driving");
   const [gpsLost, setGpsLost] = useState(false);
   const [poorGps, setPoorGps] = useState(false);
+  const [deviceOrientationEnabled, setDeviceOrientationEnabled] = useState(false);
   const routeRef = useRef<RouteResult | null>(null);
   const progressRef = useRef<RouteProgress | null>(null);
   const locationRef = useRef<UserLocation | null>(null);
   const cameraModeRef = useRef<CameraMode>("overview");
   const voiceEnabledRef = useRef(true);
   const navigationRequestedRef = useRef(false);
+  const deviceBearingRef = useRef<number | null>(null);
+  const lastOrientationUpdateRef = useRef(0);
   const lastFixTimeRef = useRef(0);
   const reroutingRef = useRef(false);
   const rerouteErrorRef = useRef(false);
@@ -117,7 +122,7 @@ export function useInAppNavigation(
     setCameraMode(mode);
   }, []);
 
-  const focusFollowing = useCallback((location = locationRef.current) => {
+  const focusFollowing = useCallback((location = locationRef.current, duration = 850) => {
     if (!map || !location) return;
     const rawMap = map.getMap();
     const closeToManeuver = (progressRef.current?.distanceToNextManeuver ?? Number.POSITIVE_INFINITY) < 100;
@@ -127,7 +132,7 @@ export function useInAppNavigation(
       pitch: closeToManeuver ? 30 : 52,
       bearing: location.bearing,
       offset: [0, Math.round(rawMap.getContainer().clientHeight * 0.16)],
-      duration: 850,
+      duration,
     });
   }, [map]);
 
@@ -218,6 +223,25 @@ export function useInAppNavigation(
     return () => window.clearInterval(timer);
   }, [navigationState, transitionNavigationState]);
 
+  useEffect(() => {
+    if (!deviceOrientationEnabled || !navigationRequestedRef.current) return;
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      const heading = getDeviceHeading(event);
+      const now = performance.now();
+      if (heading === null || now - lastOrientationUpdateRef.current < 80) return;
+      lastOrientationUpdateRef.current = now;
+      deviceBearingRef.current = heading;
+      const currentLocation = locationRef.current;
+      if (!currentLocation) return;
+      const orientedLocation = { ...currentLocation, bearing: heading, timestamp: Date.now() };
+      locationRef.current = orientedLocation;
+      setCurrentLocation(orientedLocation);
+      if (cameraModeRef.current === "following") focusFollowing(orientedLocation, 220);
+    };
+    window.addEventListener("deviceorientation", handleOrientation, true);
+    return () => window.removeEventListener("deviceorientation", handleOrientation, true);
+  }, [deviceOrientationEnabled, navigationState, focusFollowing]);
+
   const announce = useCallback((text: string) => {
     if (!voiceEnabledRef.current || typeof window === "undefined" || !("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
@@ -225,6 +249,9 @@ export function useInAppNavigation(
   }, []);
 
   const handlePosition = useCallback((location: UserLocation) => {
+    if (deviceBearingRef.current !== null) {
+      location = { ...location, bearing: deviceBearingRef.current };
+    }
     locationRef.current = location;
     lastFixTimeRef.current = Date.now();
     setCurrentLocation(location);
@@ -341,6 +368,7 @@ export function useInAppNavigation(
 
   const startNavigation = useCallback(async () => {
     if (!routeRef.current || !destination) return;
+    triggerHaptic();
     if (routeRef.current.isEstimated) {
       setError("No se puede iniciar navegación GPS: no hay una ruta real disponible.");
       transitionNavigationState("error_recoverable");
@@ -352,7 +380,12 @@ export function useInAppNavigation(
       transitionNavigationState("error_recoverable");
       return;
     }
-    const permission = await locationService.requestPermission();
+    const locationPermissionRequest = locationService.requestPermission();
+    const orientationPermissionRequest = requestDeviceOrientationPermission();
+    const [permission, orientationPermission] = await Promise.all([
+      locationPermissionRequest,
+      orientationPermissionRequest,
+    ]);
     if (permission === "denied" || permission === "unsupported") {
       setError(permission === "denied"
         ? "Permite el acceso a la ubicación en los ajustes del navegador para iniciar la navegación."
@@ -363,6 +396,8 @@ export function useInAppNavigation(
     setError(null);
     setGpsLost(false);
     setPoorGps(false);
+    setDeviceOrientationEnabled(orientationPermission);
+    deviceBearingRef.current = null;
     transitionNavigationState("location_unavailable");
     navigationRequestedRef.current = true;
     setCamera("following");
@@ -423,6 +458,8 @@ export function useInAppNavigation(
     setProgress(null);
     setGpsLost(false);
     setPoorGps(false);
+    setDeviceOrientationEnabled(false);
+    deviceBearingRef.current = null;
     transitionNavigationState("idle");
     navigationRequestedRef.current = false;
     setCamera("overview");

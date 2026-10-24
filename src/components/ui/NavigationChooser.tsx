@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTheme } from "next-themes";
-import { LoaderCircle, LocateFixed, Navigation, X } from "lucide-react";
+import { LocateFixed, Navigation, X } from "lucide-react";
 import { getNavigationUrl, NavigationProvider } from "@/lib/gis";
 import { useAppStore } from "@/store";
 import { Coordinates } from "@/types";
@@ -29,7 +28,6 @@ export function NavigationChooser({
   className,
 }: NavigationChooserProps) {
   const t = useAppStore((state) => state.t);
-  const { resolvedTheme } = useTheme();
   const setUserLocation = useAppStore((state) => state.setUserLocation);
   const [open, setOpen] = useState(false);
   const [origin, setOrigin] = useState<Coordinates | null>(null);
@@ -80,12 +78,12 @@ export function NavigationChooser({
         {buttonLabel ?? t("navigateTo")}
       </button>
       {open && (
-        <div className="fixed inset-0 z-[1700] flex items-center justify-center bg-black/50 p-4" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-[1700] flex items-center justify-center bg-black/50 p-4 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]" onClick={() => setOpen(false)}>
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby="navigation-chooser-title"
-            className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl border border-base bg-surface p-4 shadow-2xl"
+            className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-[28px] border border-base bg-surface p-4 shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between">
@@ -96,8 +94,8 @@ export function NavigationChooser({
             </div>
             <div className="flex flex-col divide-y divide-base">
               {locating && (
-                <p className="flex items-center gap-2 py-3 text-sm text-muted" role="status">
-                  <LoaderCircle size={16} className="animate-spin" /> {t("gettingNavigationOrigin")}
+                <p className="flex items-center gap-3 py-3 text-sm text-muted" role="status">
+                  <span aria-hidden="true" className="h-4 w-4 animate-pulse rounded-full bg-[var(--color-primary)]/50" /> {t("gettingNavigationOrigin")}
                 </p>
               )}
               {locationError && (
