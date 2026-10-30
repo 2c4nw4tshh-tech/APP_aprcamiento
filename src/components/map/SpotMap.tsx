@@ -71,6 +71,8 @@ export default function SpotMap({
     navigationDestination ?? null,
     MAPBOX_TOKEN,
   );
+  const navigationActive = Boolean(inAppNavigation.route)
+    && ["navigation_active", "rerouting", "location_unavailable", "destination_reached", "error_recoverable"].includes(inAppNavigation.navigationState);
   const safeCenter = Array.isArray(center) && center.length === 2 && center.every(Number.isFinite)
     ? center
     : DEFAULT_CENTER;
@@ -105,7 +107,7 @@ export default function SpotMap({
 
   if (!MAPBOX_TOKEN || mapError) {
     return (
-      <div className="relative flex h-full min-h-[350px] w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border border-base bg-bg px-6 text-center">
+      <div className="relative flex h-full min-h-[350px] w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl bg-bg px-6 text-center">
         <MapPin size={28} className="text-accent" />
         <p className="text-sm text-muted">
           {!MAPBOX_TOKEN ? t("mapNotConfigured") : t("mapLoadFailed")}
@@ -124,9 +126,9 @@ export default function SpotMap({
   }
 
   return (
-    <div className="w-full h-full min-h-[350px] rounded-2xl overflow-hidden relative z-0 border border-base">
-      {locationWarning && (
-        <div className="absolute inset-x-4 top-4 z-10 rounded-2xl border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 backdrop-blur-sm">
+    <div className="w-full h-full min-h-[350px] rounded-2xl overflow-hidden relative z-0">
+      {locationWarning && !navigationActive && (
+        <div className="absolute inset-x-4 top-4 z-10 rounded-2xl bg-yellow-500/15 px-3 py-2 shadow-lg backdrop-blur-sm">
           <p className="flex items-start gap-2 text-[11px] leading-snug text-yellow-700 dark:text-yellow-200"><AlertTriangle size={14} className="shrink-0" aria-hidden="true" />{locationWarning}</p>
         </div>
       )}
@@ -165,7 +167,7 @@ export default function SpotMap({
           if (pickMode) onMapPick?.(event.lngLat.lat, event.lngLat.lng);
         }}
       >
-        <NavigationControl position="bottom-right" />
+        {!navigationActive && <NavigationControl position="bottom-right" />}
 
         <UserLocationIndicator
           position={inAppNavigation.currentLocation}
@@ -217,7 +219,7 @@ export default function SpotMap({
           traversedCoordinates={inAppNavigation.traversedCoordinates}
         />
       </Map>
-      {mapReady && <MapStylePicker value={styleId} onChange={selectStyle} />}
+      {mapReady && !navigationActive && <MapStylePicker value={styleId} onChange={selectStyle} />}
       {navigationOrigin && navigationDestination && (
         <RouteCard
           route={inAppNavigation.route}

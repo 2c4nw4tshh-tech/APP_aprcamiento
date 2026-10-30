@@ -45,14 +45,14 @@ export function MapStylePicker({ value, onChange }: MapStylePickerProps) {
         aria-label={t("mapStylePickerLabel")}
         aria-expanded={open}
         onClick={() => setOpen((isOpen) => !isOpen)}
-        className="flex h-11 items-center gap-2 rounded-xl border border-base bg-surface/95 px-3 text-sm font-semibold text-base shadow-lg backdrop-blur hover:bg-surface"
+        className="flex h-11 items-center gap-2 rounded-xl bg-surface/95 px-3 text-sm font-semibold text-base shadow-lg backdrop-blur"
       >
         <Layers size={17} aria-hidden="true" />
         {t("mapLayers")}
       </button>
 
       {open && (
-        <div role="menu" aria-label={t("mapStylePickerLabel")} className="absolute right-0 top-12 flex min-w-40 flex-col gap-1 rounded-xl border border-base bg-surface/98 p-1.5 shadow-xl backdrop-blur">
+        <div role="menu" aria-label={t("mapStylePickerLabel")} className="absolute right-0 top-12 flex min-w-40 flex-col gap-1 rounded-xl bg-surface/98 p-1.5 shadow-lg backdrop-blur">
           {STYLE_OPTIONS.map(({ id, icon: Icon }) => {
             const label = t(MAP_STYLES[id].labelKey);
             const selected = id === value;
@@ -65,7 +65,7 @@ export function MapStylePicker({ value, onChange }: MapStylePickerProps) {
             aria-checked={selected}
             title={label}
             onClick={() => { onChange(id); setOpen(false); }}
-            className={`flex h-11 items-center gap-2 rounded-lg px-3 text-left text-sm font-medium transition-colors ${selected ? "text-white ring-2 ring-[var(--color-primary)] ring-offset-1" : "text-muted hover:bg-surface2 hover:text-base"}`}
+            className={`flex h-11 items-center gap-2 rounded-lg px-3 text-left text-sm font-medium transition-colors ${selected ? "text-white shadow-sm" : "text-muted hover:bg-surface2 hover:text-base"}`}
             style={selected ? { backgroundColor: "var(--color-primary)" } : undefined}
           >
             <Icon size={16} />

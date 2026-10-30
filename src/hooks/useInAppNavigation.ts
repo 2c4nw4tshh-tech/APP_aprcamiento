@@ -225,21 +225,33 @@ export function useInAppNavigation(
 
   useEffect(() => {
     if (!deviceOrientationEnabled || !navigationRequestedRef.current) return;
+    let absoluteSeen = false;
     const handleOrientation = (event: DeviceOrientationEvent) => {
-      const heading = getDeviceHeading(event);
+      if ((event as DeviceOrientationEvent & { absolute?: boolean }).absolute) absoluteSeen = true;
+      else if (absoluteSeen) return;
+      const raw = getDeviceHeading(event);
       const now = performance.now();
-      if (heading === null || now - lastOrientationUpdateRef.current < 80) return;
+      if (raw === null || now - lastOrientationUpdateRef.current < 50) return;
       lastOrientationUpdateRef.current = now;
+      // Low-pass filter along the shortest arc, accumulated unwrapped to avoid 359->0 jumps.
+      const previous = deviceBearingRef.current ?? raw;
+      const delta = ((raw - previous + 540) % 360) - 180;
+      if (deviceBearingRef.current !== null && Math.abs(delta) < 1) return;
+      const heading = deviceBearingRef.current === null ? raw : previous + delta * 0.25;
       deviceBearingRef.current = heading;
       const currentLocation = locationRef.current;
       if (!currentLocation) return;
       const orientedLocation = { ...currentLocation, bearing: heading, timestamp: Date.now() };
       locationRef.current = orientedLocation;
       setCurrentLocation(orientedLocation);
-      if (cameraModeRef.current === "following") focusFollowing(orientedLocation, 220);
+      if (cameraModeRef.current === "following") focusFollowing(orientedLocation, 120);
     };
+    window.addEventListener("deviceorientationabsolute", handleOrientation as EventListener, true);
     window.addEventListener("deviceorientation", handleOrientation, true);
-    return () => window.removeEventListener("deviceorientation", handleOrientation, true);
+    return () => {
+      window.removeEventListener("deviceorientationabsolute", handleOrientation as EventListener, true);
+      window.removeEventListener("deviceorientation", handleOrientation, true);
+    };
   }, [deviceOrientationEnabled, navigationState, focusFollowing]);
 
   const announce = useCallback((text: string) => {

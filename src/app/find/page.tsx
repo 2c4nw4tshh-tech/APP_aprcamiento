@@ -156,7 +156,7 @@ export default function FindPage() {
               )}
             </div>
             {!(destination && destinationQuery === destination.label) && (searchingAddress || suggestions.length > 0 || destinationQuery.trim().length >= 3) && (
-              <div className="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-2xl border border-base bg-surface shadow-xl">
+              <div className="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-2xl bg-surface shadow-lg">
                 {searchingAddress ? (
                   <p className="px-4 py-3 text-sm text-muted">{t("searchingAddresses")}</p>
                 ) : suggestions.length > 0 ? suggestions.map((suggestion, index) => (

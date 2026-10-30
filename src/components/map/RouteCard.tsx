@@ -82,8 +82,8 @@ export function RouteCard({
 
   if (isActive) {
     return createPortal(
-      <div className="pointer-events-none fixed inset-0 z-[1550]">
-        <section className="pointer-events-auto absolute inset-x-3 top-[max(env(safe-area-inset-top),12px)] mx-auto max-w-xl overflow-hidden rounded-[28px] border border-base bg-surface shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
+      <div className="pointer-events-none fixed inset-0 z-[1550] flex flex-col justify-between gap-3 px-3 pb-[max(env(safe-area-inset-bottom),12px)] pl-[max(env(safe-area-inset-left),12px)] pr-[max(env(safe-area-inset-right),12px)] pt-[max(env(safe-area-inset-top),12px)]">
+        <section className="pointer-events-auto mx-auto w-full max-w-xl shrink-0 overflow-hidden rounded-[28px] bg-surface shadow-lg transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
           {isArrived ? (
             <div className="flex items-center justify-between gap-4 px-5 py-4">
               <div>
@@ -103,7 +103,7 @@ export function RouteCard({
                 currentStepIndex={progress?.currentStepIndex ?? -1}
               />
               {(gpsLost || poorGps || navigationState === "location_unavailable" || navigationState === "error_recoverable" || error) && (
-                <div role="status" className="flex items-center gap-3 border-t border-base bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-800 dark:text-amber-200">
+                <div role="status" className="flex items-center gap-3 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-800 dark:text-amber-200">
                   <span className="min-w-0 flex-1">{error || "Obteniendo señal GPS…"}</span>
                   {(navigationState === "location_unavailable" || navigationState === "error_recoverable") && (
                     <button
@@ -121,17 +121,15 @@ export function RouteCard({
         </section>
 
         {!isArrived && (
-          <>
-            <div className="pointer-events-auto absolute bottom-[calc(env(safe-area-inset-bottom)+96px)] right-3">
-              <FloatingControlsStack
-                isFree={cameraMode === "free"}
-                voiceEnabled={voiceEnabled}
-                onRecenter={onRecenter}
-                onOverview={onOverview}
-                onToggleVoice={onToggleVoice}
-              />
-            </div>
-            <section className="pointer-events-auto absolute inset-x-3 bottom-[env(safe-area-inset-bottom)] mx-auto max-w-xl">
+          <div className="mx-auto flex min-h-0 w-full max-w-xl flex-col items-end gap-3">
+            <FloatingControlsStack
+              isFree={cameraMode === "free"}
+              voiceEnabled={voiceEnabled}
+              onRecenter={onRecenter}
+              onOverview={onOverview}
+              onToggleVoice={onToggleVoice}
+            />
+            <section className="pointer-events-auto min-h-0 w-full">
               <NavigationProgressSheet
                 progress={progress}
                 destinationLabel={destinationLabel}
@@ -140,7 +138,7 @@ export function RouteCard({
                 onCancel={cancelNavigation}
               />
             </section>
-          </>
+          </div>
         )}
       </div>,
       document.body,
@@ -149,8 +147,8 @@ export function RouteCard({
 
   return createPortal(
     <div className="fixed inset-0 z-[1550] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
-    <section role="dialog" aria-modal="true" className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[28px] border border-base bg-surface shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
-      <header className="flex items-start justify-between gap-3 border-b border-base px-4 py-3">
+    <section role="dialog" aria-modal="true" className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[28px] bg-surface shadow-lg transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
+      <header className="flex items-start justify-between gap-3 px-4 py-3">
         <div className="flex items-center gap-2">
           <RouteIcon size={19} className="shrink-0" style={{ color: NAVIGATION_BLUE }} />
           <div>
@@ -182,7 +180,7 @@ export function RouteCard({
             <p role="alert" className="text-sm text-[var(--color-destructive)]">{error}</p>
             <div className="mt-3 flex gap-2">
               <button type="button" onClick={onRetryRoute} className="min-h-11 flex-1 rounded-xl bg-[var(--color-primary)] px-3 text-sm font-semibold text-white">Intentar de nuevo</button>
-              <button type="button" onClick={onClose} className="min-h-11 rounded-xl border border-base px-3 text-sm font-semibold text-base">Cambiar destino</button>
+              <button type="button" onClick={onClose} className="min-h-11 rounded-xl bg-surface2 px-3 text-sm font-semibold text-base">Cambiar destino</button>
             </div>
           </div>
         ) : route ? (
@@ -220,7 +218,7 @@ export function RouteCard({
               </div>
             </div>
             {route.steps.length > 0 && (
-              <ol className="mt-3 max-h-16 space-y-1 overflow-y-auto border-t border-base pt-2 text-xs text-muted">
+              <ol className="mt-3 max-h-16 space-y-1 overflow-y-auto text-xs text-muted">
                 {route.steps.slice(0, 2).map((step, index) => (
                   <li key={`${index}-${step.instruction}`} className="truncate">{index + 1}. {step.instruction}</li>
                 ))}
@@ -237,7 +235,7 @@ export function RouteCard({
           </>
         ) : null}
 
-        <div className="mt-3 grid grid-cols-3 gap-2 border-t border-base pt-3">
+        <div className="mt-3 grid grid-cols-3 gap-2">
           {EXTERNAL_PROVIDERS.map(({ id, key }) => (
             <button
               key={id}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Marker } from "react-map-gl";
+import { Marker, useMap } from "react-map-gl";
 import type { MapRef } from "react-map-gl";
 import type { GeoJSONSource } from "mapbox-gl";
 import { ArrowUpRight, LocateFixed, Navigation, Volume2, VolumeX, X } from "lucide-react";
@@ -28,7 +28,7 @@ function formatDuration(seconds: number) {
 
 export function ManeuverBannerView({ instruction, streetName, distanceMeters, loading = false, steps, currentStepIndex }: ManeuverBannerViewProps) {
   return (
-    <details className="border-b border-base bg-surface shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+    <details className="bg-surface">
       <summary className="flex min-h-[76px] cursor-pointer list-none items-center gap-4 px-4 py-3">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[var(--color-primary)] text-white" aria-hidden="true">
           {loading ? <span className="h-5 w-5 animate-pulse rounded-full bg-white/60" /> : <Navigation size={24} className="-rotate-45" />}
@@ -39,7 +39,7 @@ export function ManeuverBannerView({ instruction, streetName, distanceMeters, lo
         </span>
         <span className="shrink-0 text-lg font-semibold tabular-nums text-base">{distanceMeters == null ? "--" : formatDistance(distanceMeters)}</span>
       </summary>
-      <ol className="max-h-48 space-y-2 overflow-y-auto border-t border-base px-4 py-3 text-sm">
+      <ol className="max-h-48 space-y-2 overflow-y-auto px-4 pb-3 text-sm">
         {steps.map((step, index) => (
           <li key={`${index}-${step.instruction}`} className={`flex gap-3 ${index === currentStepIndex ? "font-semibold text-[var(--color-primary)]" : "text-muted"}`}>
             <span className="w-12 shrink-0">{formatDistance(step.distanceMeters)}</span>
@@ -65,7 +65,7 @@ export function NavigationProgressSheet({ progress, destinationLabel, steps = []
 
   return (
     <section
-      className="rounded-t-[32px] border border-base bg-surface px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.15)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+      className="rounded-[28px] bg-surface px-4 py-3 shadow-lg transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
       aria-label="Progreso de navegación"
       onTouchStart={(event) => { touchStartY.current = event.touches[0]?.clientY ?? null; }}
       onTouchEnd={(event) => {
@@ -77,22 +77,20 @@ export function NavigationProgressSheet({ progress, destinationLabel, steps = []
         touchStartY.current = null;
       }}
     >
-      <button type="button" onClick={() => setExpanded((value) => !value)} aria-label={expanded ? "Contraer detalles de ruta" : "Expandir detalles de ruta"} aria-expanded={expanded} className="mx-auto mb-2 block h-1.5 w-10 rounded-full bg-[var(--color-label-secondary)]" />
+      <button type="button" onClick={() => setExpanded((value) => !value)} aria-label={expanded ? "Contraer detalles de ruta" : "Expandir detalles de ruta"} aria-expanded={expanded} className="mx-auto mb-2 block h-1.5 w-10 rounded-full bg-[var(--color-label-secondary)]/40" />
       <div className="flex min-h-14 items-center gap-3">
         <div className="min-w-0">
           <p className="text-xl font-bold leading-tight tabular-nums text-base">{progress?.eta.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) ?? "--:--"}</p>
           <p className="max-w-24 truncate text-xs text-muted">{destinationLabel || "Llegada"}</p>
         </div>
-        <span aria-hidden="true" className="text-muted">|</span>
         <p className="whitespace-nowrap text-sm font-medium text-base">{progress ? formatDuration(progress.durationRemaining) : "Calculando"}</p>
-        <span aria-hidden="true" className="text-muted">|</span>
-        <p className="whitespace-nowrap text-sm font-medium text-base">{progress ? formatDistance(progress.distanceRemaining) : "--"}</p>
-        <button type="button" onClick={onCancel} aria-label="Cancelar navegación" title="Cancelar navegación" className="ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--color-destructive)] text-white hover:brightness-90">
+        <p className="whitespace-nowrap text-sm font-medium text-muted">{progress ? formatDistance(progress.distanceRemaining) : "--"}</p>
+        <button type="button" onClick={onCancel} aria-label="Cancelar navegación" title="Cancelar navegación" className="ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--color-destructive)] text-white shadow-lg transition-all duration-150 ease-out hover:scale-105 active:scale-90">
           <X size={22} />
         </button>
       </div>
       {expanded && (
-        <div className="max-h-[45dvh] overflow-y-auto border-t border-base pt-3">
+        <div className="max-h-[40dvh] overflow-y-auto pt-3">
           <ol className="space-y-3 text-sm">
             {steps.map((step, index) => (
               <li key={`${index}-${step.instruction}`} className={`flex gap-3 ${index === currentStepIndex ? "font-semibold text-[var(--color-primary)]" : "text-muted"}`}>
@@ -134,11 +132,56 @@ export function UserLocationIndicator({ position, fallback }: UserLocationIndica
     return () => { if (frameRef.current != null) cancelAnimationFrame(frameRef.current); };
   }, [target.lat, target.lng]);
 
+  const { current: mapRef } = useMap();
+  const arrowRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef(position?.bearing ?? 0);
+
+  const applyRotation = () => {
+    if (!arrowRef.current) return;
+    const mapBearing = mapRef?.getBearing() ?? 0;
+    arrowRef.current.style.transform = `rotate(${headingRef.current - mapBearing}deg)`;
+  };
+
+  // Unwrap the heading so crossing 0/360 never spins the arrow the long way round.
+  useEffect(() => {
+    if (position?.bearing == null) return;
+    headingRef.current += ((position.bearing - headingRef.current + 540) % 360) - 180;
+    applyRotation();
+  }, [position?.bearing]);
+
+  useEffect(() => {
+    if (!mapRef) return;
+    const rawMap = mapRef.getMap();
+    rawMap.on("rotate", applyRotation);
+    applyRotation();
+    return () => { rawMap.off("rotate", applyRotation); };
+  }, [mapRef]);
+
+  const hasHeading = position?.bearing != null;
+
   return (
     <Marker latitude={displayPosition.lat} longitude={displayPosition.lng}>
-      <div className="relative grid h-10 w-10 place-items-center" aria-label="Tu ubicación">
-        <span className={`absolute h-9 w-9 rounded-full bg-[var(--color-primary)]/20 ${position && position.accuracy > 50 ? "animate-pulse border-2 border-dashed border-[var(--color-primary)]" : ""}`} />
-        <Navigation size={27} className="relative drop-shadow-md" style={{ color: "var(--color-primary)", fill: "var(--color-primary)", stroke: "var(--color-bg)", strokeWidth: 2, transform: `rotate(${position?.bearing ?? 0}deg)` }} />
+      <div className="relative grid h-16 w-16 place-items-center" aria-label="Tu ubicación">
+        <span className={`absolute h-9 w-9 rounded-full bg-[var(--color-primary)]/15 ${position && position.accuracy > 50 ? "animate-pulse" : ""}`} />
+        <div ref={arrowRef} className="absolute inset-0 will-change-transform">
+          <svg viewBox="0 0 64 64" className="h-full w-full overflow-visible" aria-hidden="true">
+            <defs>
+              <radialGradient id="spotsync-heading-cone" cx="32" cy="32" r="34" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stopColor="#007AFF" stopOpacity="0.5" />
+                <stop offset="1" stopColor="#007AFF" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            {hasHeading && <path d="M32 32 L9 2 A38 38 0 0 1 55 2 Z" fill="url(#spotsync-heading-cone)" />}
+            <path
+              d="M32 17 L43 44 L32 38 L21 44 Z"
+              fill="var(--color-primary)"
+              stroke="#FFFFFF"
+              strokeWidth="3.5"
+              strokeLinejoin="round"
+              style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.35))" }}
+            />
+          </svg>
+        </div>
       </div>
     </Marker>
   );
@@ -155,9 +198,9 @@ interface FloatingControlsStackProps {
 export function FloatingControlsStack({ isFree, voiceEnabled, onRecenter, onOverview, onToggleVoice }: FloatingControlsStackProps) {
   return (
     <div className="pointer-events-auto flex flex-col gap-2">
-      {isFree && <button type="button" onClick={onRecenter} aria-label="Volver a centrar" title="Volver a centrar" className="grid h-12 w-12 place-items-center rounded-full border border-base bg-surface shadow-lg"><LocateFixed size={21} className="text-[var(--color-primary)]" /></button>}
-      <button type="button" onClick={onOverview} aria-label="Vista general de la ruta" title="Vista general de la ruta" className="grid h-12 w-12 place-items-center rounded-full border border-base bg-surface shadow-lg"><ArrowUpRight size={21} className="text-base" /></button>
-      <button type="button" onClick={onToggleVoice} aria-label={voiceEnabled ? "Silenciar indicaciones" : "Activar indicaciones de voz"} title={voiceEnabled ? "Silenciar indicaciones" : "Activar indicaciones de voz"} className="grid h-12 w-12 place-items-center rounded-full border border-base bg-surface shadow-lg">{voiceEnabled ? <Volume2 size={21} /> : <VolumeX size={21} />}</button>
+      {isFree && <button type="button" onClick={onRecenter} aria-label="Volver a centrar" title="Volver a centrar" className="grid h-12 w-12 place-items-center rounded-full bg-surface shadow-lg transition-all duration-150 ease-out hover:scale-105 active:scale-90"><LocateFixed size={21} className="text-[var(--color-primary)]" /></button>}
+      <button type="button" onClick={onOverview} aria-label="Vista general de la ruta" title="Vista general de la ruta" className="grid h-12 w-12 place-items-center rounded-full bg-surface shadow-lg transition-all duration-150 ease-out hover:scale-105 active:scale-90"><ArrowUpRight size={21} className="text-base" /></button>
+      <button type="button" onClick={onToggleVoice} aria-label={voiceEnabled ? "Silenciar indicaciones" : "Activar indicaciones de voz"} title={voiceEnabled ? "Silenciar indicaciones" : "Activar indicaciones de voz"} className="grid h-12 w-12 place-items-center rounded-full bg-surface shadow-lg transition-all duration-150 ease-out hover:scale-105 active:scale-90">{voiceEnabled ? <Volume2 size={21} /> : <VolumeX size={21} />}</button>
     </div>
   );
 }
